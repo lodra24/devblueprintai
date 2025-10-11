@@ -19,12 +19,12 @@ class GenerateBlueprintJob implements ShouldQueue
      *
      * @var int
      */
-    public int $projectId;
+    public string $projectId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(int $projectId)
+    public function __construct(string $projectId)
     {
         $this->projectId = $projectId;
     }
