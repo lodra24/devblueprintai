@@ -24,8 +24,17 @@ class ProjectPolicy
      */
     public function view(?User $user, Project $project): bool
     {
-   
-        return $project->user_id === null || ($user && $user->id === $project->user_id);
+        if ($user) {
+            return $user->id === $project->user_id;
+        }
+
+
+        if ($project->user_id === null) {
+            $guestProjectIds = session('guest_project_ids', []);
+            return in_array($project->id, $guestProjectIds);
+        }
+
+        return false;
     }
 
     /**
