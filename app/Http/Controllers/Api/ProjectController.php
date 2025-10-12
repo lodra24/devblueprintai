@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProjectRequest; 
 use App\Jobs\GenerateBlueprintJob;
 use App\Models\Project;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+
 
 class ProjectController extends Controller
 {
@@ -17,20 +17,12 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request) 
     {
+       
+        $validated = $request->validated(); 
+
         $userId = Auth::id();
-
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'prompt' => ['required', 'string', 'max:5000'],
-        ];
-
-        if ($userId) {
-            $rules['name'][] = Rule::unique('projects')->where('user_id', $userId);
-        }
-
-        $validated = $request->validate($rules);
 
         $project = new Project();
         $project->name = $validated['name'];
@@ -38,15 +30,12 @@ class ProjectController extends Controller
         $project->user_id = $userId;
         $project->save();
 
-        // GÜVENLİK GÜNCELLEMESİ (Daha Sağlam Yöntem):
         if (!$userId) {
-           
             $guestProjectIds = $request->session()->get('guest_project_ids', []);
             $guestProjectIds[] = $project->id;
             $request->session()->put('guest_project_ids', $guestProjectIds);
         }
 
-        // After the project is saved, start the job.
         GenerateBlueprintJob::dispatch($project->id);
 
         return response()->json([
