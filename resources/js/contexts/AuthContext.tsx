@@ -5,12 +5,9 @@ import React, {
     useEffect,
     ReactNode,
 } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-// Axios için varsayılan ayarlar
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://devblueprint.test";
+import api from "../api"; // axios yerine merkezi api istemcisini import et
+import { GUEST_PROJECT_ID_KEY } from "../constants"; // Sabiti import et
 
 // Kullanıcı objesinin tipi
 interface User {
@@ -38,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Kullanıcıyı getiren fonksiyon
     const fetchUser = async () => {
         try {
-            const response = await axios.get("/api/user");
+            const response = await api.get("/api/user"); // axios -> api
             setUser(response.data);
         } catch (error) {
             setUser(null);
@@ -48,28 +45,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-        fetchUser();
+        api.get("/sanctum/csrf-cookie").then(() => {
+            // axios -> api
+            fetchUser();
+        });
     }, []);
+
+    // Giriş veya kayıt sonrası çalışacak ortak fonksiyon
+    const handlePostAuth = async () => {
+        const guestProjectId = localStorage.getItem(GUEST_PROJECT_ID_KEY);
+
+        if (guestProjectId) {
+            try {
+                await api.post("/api/projects/claim", {
+                    project_id: guestProjectId,
+                });
+                localStorage.removeItem(GUEST_PROJECT_ID_KEY);
+                navigate(`/blueprint/${guestProjectId}`);
+                return;
+            } catch (claimError) {
+                console.error("Failed to claim project:", claimError);
+                localStorage.removeItem(GUEST_PROJECT_ID_KEY);
+                navigate("/");
+                return;
+            }
+        }
+
+        navigate("/");
+    };
 
     // Kayıt fonksiyonu
     const register = async (data: any) => {
-        await axios.get("/sanctum/csrf-cookie");
-        await axios.post("/register", data);
-        await fetchUser(); // Kullanıcı bilgisini güncelle
-        navigate("/"); // Ana sayfaya yönlendir
+        await api.post("/register", data);
+        await fetchUser();
+        await handlePostAuth();
     };
 
     // Giriş fonksiyonu
     const login = async (data: any) => {
-        await axios.get("/sanctum/csrf-cookie");
-        await axios.post("/login", data);
-        await fetchUser(); // Kullanıcı bilgisini güncelle
-        navigate("/"); // Ana sayfaya yönlendir
+        await api.post("/login", data);
+        await fetchUser();
+        await handlePostAuth();
     };
 
     // Çıkış fonksiyonu
     const logout = async () => {
-        await axios.post("/logout");
+        await api.post("/logout");
         setUser(null);
         navigate("/");
     };
@@ -82,8 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
     };
 
-    // AuthContext'i sarmalayan ana bileşen için `BrowserRouter`'a ihtiyacımız var.
-    // Bunu app.tsx'de bırakmak daha doğru. Bu yüzden buradaki BrowserRouter'ı kaldırıyoruz.
     return (
         <AuthContext.Provider value={value}>
             {!isLoading && children}
@@ -91,7 +110,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-// Hook'u güncelliyoruz, artık `useNavigate` içeride tanımlanmayacak.
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {

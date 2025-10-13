@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ClaimProjectRequest extends FormRequest
 {
@@ -12,7 +11,7 @@ class ClaimProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Yetkilendirme policy sınıfı tarafından yapıldığı için true olmalı.
+        // Yetkilendirme policy sınıfı tarafından yapılacağı için true kalmalı.
         return true;
     }
 
@@ -27,7 +26,7 @@ class ClaimProjectRequest extends FormRequest
             'project_id' => [
                 'required',
                 'string',
-                Rule::exists('projects', 'id')->whereNull('user_id'),
+                'exists:projects,id', // Sadece projenin veritabanında var olup olmadığını kontrol et
             ],
         ];
     }

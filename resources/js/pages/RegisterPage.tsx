@@ -30,11 +30,10 @@ function RegisterPage() {
                 password,
                 password_confirmation: passwordConfirmation,
             });
-            // AuthContext içindeki register fonksiyonu bizi yönlendirecek.
+            // Yönlendirme AuthContext tarafından yönetiliyor.
         } catch (err: any) {
             console.error("Registration failed:", err);
             if (err.response && err.response.data && err.response.data.errors) {
-                // Laravel'den gelen validasyon hatalarını al
                 const errorMessages = Object.values(
                     err.response.data.errors
                 ).flat();
@@ -45,8 +44,7 @@ function RegisterPage() {
                         "An error occurred during registration."
                 );
             }
-        } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Sadece hata durumunda isLoading'i burada false yap
         }
     };
 

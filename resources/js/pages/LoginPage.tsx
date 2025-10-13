@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom"; // useNavigate kaldırıldı çünkü artık AuthContext içinde
 import { useAuth } from "../contexts/AuthContext";
 
 function LoginPage() {
@@ -9,7 +9,6 @@ function LoginPage() {
     const [error, setError] = useState<string | null>(null);
 
     const { login } = useAuth();
-    const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -18,12 +17,10 @@ function LoginPage() {
 
         try {
             await login({ email, password });
-            // AuthContext içindeki login fonksiyonu bizi yönlendirecek.
-            // Başarılı giriş sonrası ek işlemler gerekirse buraya eklenebilir.
+            // Yönlendirme artık AuthContext tarafından yönetiliyor.
         } catch (err: any) {
             console.error("Login failed:", err);
             if (err.response && err.response.data && err.response.data.errors) {
-                // Laravel'den gelen validasyon hatalarını al
                 const errorMessages = Object.values(
                     err.response.data.errors
                 ).flat();
@@ -31,9 +28,9 @@ function LoginPage() {
             } else {
                 setError(err.response?.data?.message || "Invalid credentials.");
             }
-        } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Sadece hata durumunda isLoading'i burada false yap
         }
+        // Başarılı durumda isLoading'i false yapmaya gerek yok, çünkü sayfa değişecek.
     };
 
     return (

@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://devblueprint.test"; // API adresimiz
+import api from "../api";
+import { GUEST_PROJECT_ID_KEY } from "../constants";
 
 function HomePage() {
     const [name, setName] = useState("");
@@ -18,7 +16,7 @@ function HomePage() {
         setError(null);
 
         try {
-            const response = await axios.post("/api/projects", {
+            const response = await api.post("/api/projects", {
                 name: name,
                 prompt: prompt,
             });
@@ -26,8 +24,7 @@ function HomePage() {
             if (response.status === 202) {
                 const projectId = response.data.project_id;
 
-                // YENİ EKLENEN ADIM: Proje ID'sini Local Storage'a kaydet
-                localStorage.setItem("guestProjectId", projectId);
+                localStorage.setItem(GUEST_PROJECT_ID_KEY, projectId);
 
                 navigate(`/blueprint/${projectId}`);
             }

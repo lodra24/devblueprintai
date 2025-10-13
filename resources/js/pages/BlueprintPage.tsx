@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { useAuth } from "../contexts/AuthContext"; // useAuth hook'unu import et
-import AuthCallToAction from "../components/AuthCallToAction"; // AuthCallToAction bileşenini import et
+import api from "../api"; // axios'u api ile değiştir
+import { useAuth } from "../contexts/AuthContext";
+import AuthCallToAction from "../components/AuthCallToAction";
+import { GUEST_PROJECT_ID_KEY } from "../constants"; // Sabiti import et
 
-// Project tipini tanımlayalım. Şimdilik basit tutuyoruz.
 interface Project {
     id: string;
     name: string;
     prompt: string;
     status: string;
-    // blueprint verisi daha sonra eklenecek
 }
 
 function BlueprintPage() {
@@ -19,20 +18,19 @@ function BlueprintPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { user, isLoading: isAuthLoading } = useAuth(); // Auth context'inden kullanıcı durumunu al
+    const { user, isLoading: isAuthLoading } = useAuth();
     const [isGuestProject, setIsGuestProject] = useState(false);
 
     useEffect(() => {
-        // Sayfa yüklendiğinde proje verilerini çekmek için bu fonksiyon çalışır.
         const fetchProjectData = async () => {
-            if (!projectId) return; // projectId yoksa işlemi durdur
+            if (!projectId) return;
 
             setIsLoading(true);
             setError(null);
 
             try {
-                await axios.get("/sanctum/csrf-cookie");
-                const response = await axios.get(`/api/projects/${projectId}`);
+                // api.get('/sanctum/csrf-cookie') AuthContext'te zaten çağrılıyor, burada gerek yok.
+                const response = await api.get(`/api/projects/${projectId}`);
                 setProject(response.data);
             } catch (err: any) {
                 console.error("Failed to fetch project data:", err);
@@ -47,14 +45,13 @@ function BlueprintPage() {
 
         fetchProjectData();
 
-        // Local Storage'daki misafir projesi ID'sini kontrol et
-        const guestProjectId = localStorage.getItem("guestProjectId");
+        const guestProjectId = localStorage.getItem(GUEST_PROJECT_ID_KEY);
         if (guestProjectId && guestProjectId === projectId) {
             setIsGuestProject(true);
         } else {
             setIsGuestProject(false);
         }
-    }, [projectId]); // Bu effect, projectId değiştiğinde yeniden çalışır.
+    }, [projectId]);
 
     if (isLoading || isAuthLoading) {
         return (
@@ -75,15 +72,11 @@ function BlueprintPage() {
         );
     }
 
-    // AuthCallToAction bileşenini gösterme koşulu:
-    // Kullanıcı giriş yapmamış (user null) VE bu bir misafir projesi
     const showAuthCallToAction = !user && isGuestProject;
 
     return (
         <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
             <div className="max-w-7xl mx-auto pb-24">
-                {" "}
-                {/* Alttaki banner için boşluk bırak */}
                 <h1 className="text-3xl font-bold text-sky-400">
                     {project?.name}
                 </h1>
@@ -102,10 +95,8 @@ function BlueprintPage() {
                         complete.
                     </p>
                 </div>
-                {/* Gelecekte Trello benzeri pano buraya gelecek */}
             </div>
 
-            {/* Koşullu olarak bileşeni göster */}
             {showAuthCallToAction && <AuthCallToAction />}
         </div>
     );
