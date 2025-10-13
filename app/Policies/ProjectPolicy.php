@@ -13,40 +13,35 @@ class ProjectPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Genellikle liste endpoint'leri için kullanılır, şimdilik false kalabilir.
         return false;
     }
 
     /**
      * Determine whether the user can view the model.
-     * 
-     * ?User type-hint'i sayesinde bu policy, hem giriş yapmış hem de misafir
-     * kullanıcılar için çalışacaktır. Misafir ise $user null olacaktır.
      */
     public function view(?User $user, Project $project): bool
     {
-        if ($user) {
-            return $user->id === $project->user_id;
+        // Eğer projenin bir sahibi varsa (kayıtlı kullanıcıya aitse),
+        // sadece o kullanıcı görebilir.
+        if ($project->user_id !== null) {
+            return $user?->id === $project->user_id;
         }
 
-
-        if ($project->user_id === null) {
-            $guestProjectIds = session('guest_project_ids', []);
-            return in_array($project->id, $guestProjectIds);
-        }
-
-        return false;
+        // Eğer projenin sahibi yoksa (misafir projesi ise), herkes görebilir.
+        return true;
     }
 
     /**
      * Determine whether the user can claim the model.
      * Kullanıcının bir projeyi sahiplenip sahiplenemeyeceğini belirler.
      */
-    public function claim(User $user, Project $project): Response // Dönüş tipini değiştirin
-{
+    public function claim(User $user, Project $project): Response
+    {
         return $project->user_id === null
             ? Response::allow()
             : Response::deny('This project has already been claimed.', 409); 
-}
+    }
 
     /**
      * Determine whether the user can create models.
@@ -61,7 +56,7 @@ class ProjectPolicy
      */
     public function update(?User $user, Project $project): bool
     {
-
+        // Sadece projenin sahibi güncelleyebilir.
         return $user?->id === $project->user_id;
     }
 
@@ -70,6 +65,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
+        // Sadece projenin sahibi silebilir (Bu özellik şimdilik kapalı).
         return false;
     }
 

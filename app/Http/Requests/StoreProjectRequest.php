@@ -13,8 +13,6 @@ class StoreProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Since authorization is handled by the Policy classes, we leave this as true.
-        // If it remains false, all requests will receive a 403 Forbidden error.
         return true;
     }
 
@@ -32,6 +30,7 @@ class StoreProjectRequest extends FormRequest
             'prompt' => ['required', 'string', 'max:5000'],
         ];
 
+        // Benzersizlik kuralını SADECE kullanıcı giriş yapmışsa uygula.
         if ($userId) {
             $rules['name'][] = Rule::unique('projects')->where('user_id', $userId);
         }

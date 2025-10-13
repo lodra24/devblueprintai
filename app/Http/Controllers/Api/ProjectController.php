@@ -30,12 +30,6 @@ class ProjectController extends Controller
         $project->user_id = $userId;
         $project->save();
 
-        if (!$userId) {
-            $guestProjectIds = $request->session()->get('guest_project_ids', []);
-            $guestProjectIds[] = $project->id;
-            $request->session()->put('guest_project_ids', $guestProjectIds);
-        }
-
         GenerateBlueprintJob::dispatch($project->id);
 
         return response()->json([

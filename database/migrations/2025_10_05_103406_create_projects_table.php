@@ -14,9 +14,8 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade')->index();
             $table->string('name');
-            $table->unique(['user_id', 'name']);
             $table->text('prompt');
             $table->json('blueprint')->nullable();
             $table->string('status')->default('pending');
