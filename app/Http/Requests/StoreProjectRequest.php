@@ -33,7 +33,7 @@ class StoreProjectRequest extends FormRequest
         ];
 
         if ($userId) {
-            $rules['name'][] = Rule::unique('projects')->where('user_id', '!=', null)->where('user_id', $userId);
+            $rules['name'][] = Rule::unique('projects')->where('user_id', $userId);
         }
 
         return $rules;

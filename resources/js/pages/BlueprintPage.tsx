@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext"; // useAuth hook'unu import et
+import AuthCallToAction from "../components/AuthCallToAction"; // AuthCallToAction bileşenini import et
 
 // Project tipini tanımlayalım. Şimdilik basit tutuyoruz.
 interface Project {
@@ -17,6 +19,9 @@ function BlueprintPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const { user, isLoading: isAuthLoading } = useAuth(); // Auth context'inden kullanıcı durumunu al
+    const [isGuestProject, setIsGuestProject] = useState(false);
+
     useEffect(() => {
         // Sayfa yüklendiğinde proje verilerini çekmek için bu fonksiyon çalışır.
         const fetchProjectData = async () => {
@@ -26,6 +31,7 @@ function BlueprintPage() {
             setError(null);
 
             try {
+                await axios.get("/sanctum/csrf-cookie");
                 const response = await axios.get(`/api/projects/${projectId}`);
                 setProject(response.data);
             } catch (err: any) {
@@ -40,9 +46,17 @@ function BlueprintPage() {
         };
 
         fetchProjectData();
+
+        // Local Storage'daki misafir projesi ID'sini kontrol et
+        const guestProjectId = localStorage.getItem("guestProjectId");
+        if (guestProjectId && guestProjectId === projectId) {
+            setIsGuestProject(true);
+        } else {
+            setIsGuestProject(false);
+        }
     }, [projectId]); // Bu effect, projectId değiştiğinde yeniden çalışır.
 
-    if (isLoading) {
+    if (isLoading || isAuthLoading) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4">
                 <h1 className="text-3xl font-bold text-sky-400 animate-pulse">
@@ -61,9 +75,15 @@ function BlueprintPage() {
         );
     }
 
+    // AuthCallToAction bileşenini gösterme koşulu:
+    // Kullanıcı giriş yapmamış (user null) VE bu bir misafir projesi
+    const showAuthCallToAction = !user && isGuestProject;
+
     return (
         <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto pb-24">
+                {" "}
+                {/* Alttaki banner için boşluk bırak */}
                 <h1 className="text-3xl font-bold text-sky-400">
                     {project?.name}
                 </h1>
@@ -84,6 +104,9 @@ function BlueprintPage() {
                 </div>
                 {/* Gelecekte Trello benzeri pano buraya gelecek */}
             </div>
+
+            {/* Koşullu olarak bileşeni göster */}
+            {showAuthCallToAction && <AuthCallToAction />}
         </div>
     );
 }
