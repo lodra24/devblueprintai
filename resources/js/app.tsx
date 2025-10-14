@@ -1,3 +1,5 @@
+// resources/js/app.tsx
+
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -5,14 +7,12 @@ import HomePage from "./pages/HomePage";
 import BlueprintPage from "./pages/BlueprintPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import { AuthProvider } from "./contexts/AuthContext"; // AuthProvider'ı import et
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
     return (
-        <AuthProvider>
-            {" "}
-            {/* Uygulamayı AuthProvider ile sarmala */}
-            <BrowserRouter>
+        <BrowserRouter>
+            <AuthProvider>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route
@@ -22,8 +22,8 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                 </Routes>
-            </BrowserRouter>
-        </AuthProvider>
+            </AuthProvider>
+        </BrowserRouter>
     );
 }
 

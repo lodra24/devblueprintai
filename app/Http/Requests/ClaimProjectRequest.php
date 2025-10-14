@@ -25,7 +25,7 @@ class ClaimProjectRequest extends FormRequest
         return [
             'project_id' => [
                 'required',
-                'string',
+                'uuid',
                 'exists:projects,id', // Sadece projenin veritabanında var olup olmadığını kontrol et
             ],
         ];
