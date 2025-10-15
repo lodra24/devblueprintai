@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { getProject } from "../api"; // Named import'a geçildi
 import { useAuth } from "../contexts/AuthContext";
 import AuthCallToAction from "../components/AuthCallToAction";
 import { GUEST_PROJECT_ID_KEY } from "../constants";
-
-interface Project {
-    id: string;
-    name: string;
-    prompt: string;
-    status: string;
-}
+import { useProject } from "../hooks/useProject"; // Yeni hook'umuzu import ediyoruz
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const location = useLocation();
-    const [project, setProject] = useState<Project | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [showClaimSuccess, setShowClaimSuccess] = useState(false);
+
+    // Eski useState ve useEffect tabanlı veri çekme mantığını kaldırıyoruz.
+    // Artık tüm veri yönetimi useProject hook'u tarafından yapılacak.
+    const { data: project, isLoading, error } = useProject(projectId);
 
     const { user, isAuthLoading } = useAuth();
     const [isGuestProject, setIsGuestProject] = useState(false);
@@ -32,37 +26,12 @@ function BlueprintPage() {
     }, [location.state]);
 
     useEffect(() => {
-        const fetchProjectData = async () => {
-            if (!projectId) return;
-
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                // Doğrudan 'getProject' fonksiyonunu kullanıyoruz
-                const projectData = await getProject(projectId);
-                setProject(projectData);
-            } catch (err: any) {
-                console.error("Failed to fetch project data:", err);
-                setError(
-                    err.response?.data?.message ||
-                        "Could not load project data."
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        void fetchProjectData();
-
+        // Bu useEffect sadece misafir projesi durumunu kontrol etmek için kaldı.
         const guestProjectId = localStorage.getItem(GUEST_PROJECT_ID_KEY);
-        if (guestProjectId && guestProjectId === projectId) {
-            setIsGuestProject(true);
-        } else {
-            setIsGuestProject(false);
-        }
+        setIsGuestProject(!!(guestProjectId && guestProjectId === projectId));
     }, [projectId]);
 
+    // React Query'nin isLoading'i ile Auth'un yüklenme durumunu birleştiriyoruz.
     if (isLoading || isAuthLoading) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4">
@@ -77,7 +46,10 @@ function BlueprintPage() {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4">
                 <h1 className="text-3xl font-bold text-red-500">Error</h1>
-                <p className="mt-4 text-lg text-gray-300">{error}</p>
+                {/* Hata nesnesinden mesajı göstermek daha güvenilir */}
+                <p className="mt-4 text-lg text-gray-300">
+                    {(error as any)?.message || "Could not load project data."}
+                </p>
             </div>
         );
     }

@@ -1,46 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createProject } from "../api"; // Eski 'api' importu yerine 'createProject' fonksiyonunu import ediyoruz
-import { GUEST_PROJECT_ID_KEY } from "../constants";
+import { useCreateProject } from "../hooks/useCreateProject";
 
 function HomePage() {
     const [name, setName] = useState("");
     const [prompt, setPrompt] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+
+    const createProjectMutation = useCreateProject();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setIsLoading(true);
-        setError(null);
 
-        try {
-            // Doğrudan 'createProject' fonksiyonunu çağırıyoruz
-            const response = await createProject({
-                name: name,
-                prompt: prompt,
-            });
-
-            // Yanıt 202 ise (kabul edildi) ve proje ID'si varsa devam et
-            if (response.project_id) {
-                const projectId = response.project_id;
-
-                // Artık AuthContext içinde olmadığımız için misafir projesini local storage'a burada kaydediyoruz.
-                // Bu mantık React Query'ye geçince daha da iyileşecek.
-                localStorage.setItem(GUEST_PROJECT_ID_KEY, projectId);
-
-                navigate(`/blueprint/${projectId}`);
-            }
-        } catch (err: any) {
-            console.error("Project creation failed:", err);
-            setError(
-                err.response?.data?.message || "An unexpected error occurred."
-            );
-        } finally {
-            setIsLoading(false);
-        }
+        createProjectMutation.mutate({ name, prompt });
     };
+
+    const isLoading = createProjectMutation.isPending;
+    const error = createProjectMutation.error;
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 sm:p-6 md:p-8">
@@ -98,7 +72,11 @@ function HomePage() {
 
                     {error && (
                         <div className="rounded-md bg-red-500/20 p-4">
-                            <p className="text-sm text-red-400">{error}</p>
+                            {/* Axios hatası ise içindeki message'ı, değilse genel mesajı göster */}
+                            <p className="text-sm text-red-400">
+                                {(error as any).response?.data?.message ||
+                                    "An unexpected error occurred."}
+                            </p>
                         </div>
                     )}
 
