@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api";
+import { createProject } from "../api"; // Eski 'api' importu yerine 'createProject' fonksiyonunu import ediyoruz
 import { GUEST_PROJECT_ID_KEY } from "../constants";
 
 function HomePage() {
@@ -16,14 +16,18 @@ function HomePage() {
         setError(null);
 
         try {
-            const response = await api.post("/api/projects", {
+            // Doğrudan 'createProject' fonksiyonunu çağırıyoruz
+            const response = await createProject({
                 name: name,
                 prompt: prompt,
             });
 
-            if (response.status === 202) {
-                const projectId = response.data.project_id;
+            // Yanıt 202 ise (kabul edildi) ve proje ID'si varsa devam et
+            if (response.project_id) {
+                const projectId = response.project_id;
 
+                // Artık AuthContext içinde olmadığımız için misafir projesini local storage'a burada kaydediyoruz.
+                // Bu mantık React Query'ye geçince daha da iyileşecek.
                 localStorage.setItem(GUEST_PROJECT_ID_KEY, projectId);
 
                 navigate(`/blueprint/${projectId}`);

@@ -1,13 +1,15 @@
-// resources/js/app.tsx
-
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 import HomePage from "./pages/HomePage";
 import BlueprintPage from "./pages/BlueprintPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./contexts/AuthContext";
+import { queryClient } from "./lib/queryClient";
 
 function App() {
     return (
@@ -32,7 +34,12 @@ if (container) {
     const root = createRoot(container);
     root.render(
         <React.StrictMode>
-            <App />
+            <QueryClientProvider client={queryClient}>
+                <App />
+                {import.meta.env.DEV && (
+                    <ReactQueryDevtools initialIsOpen={false} />
+                )}
+            </QueryClientProvider>
         </React.StrictMode>
     );
 }

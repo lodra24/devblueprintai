@@ -8,7 +8,14 @@ import React, {
     useMemo,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api";
+import {
+    getUser,
+    login as apiLogin,
+    register as apiRegister,
+    logout as apiLogout,
+    claimProject,
+} from "../api"; // Sadece API fonksiyonları buradan
+import { ensureCsrf } from "../lib/http"; // ensureCsrf doğru yerden import edildi
 import { GUEST_PROJECT_ID_KEY } from "../constants";
 
 // --- Tip Tanımlamaları ---
@@ -48,12 +55,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const navigate = useNavigate();
 
-    // fetchUser fonksiyonunu, component'in mount durumunu kontrol edecek şekilde güncelledik.
     const fetchUser = useCallback(async (isMountedChecker: () => boolean) => {
         try {
-            const response = await api.get("/api/user");
+            const userData = await getUser();
             if (isMountedChecker()) {
-                setUser(response.data);
+                setUser(userData);
             }
         } catch (error) {
             if (isMountedChecker()) {
@@ -69,11 +75,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const initializeAuth = async () => {
             try {
-                await api.get("/sanctum/csrf-cookie");
+                await ensureCsrf();
             } catch (error) {
                 console.error("Failed to fetch CSRF cookie:", error);
             } finally {
-                // fetchUser'a bayrağı kontrol edecek fonksiyonu iletiyoruz.
                 await fetchUser(isMountedChecker);
                 if (isMounted) {
                     setIsAuthLoading(false);
@@ -93,9 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (guestProjectId) {
             try {
-                await api.post("/api/projects/claim", {
-                    project_id: guestProjectId,
-                });
+                await claimProject(guestProjectId);
                 localStorage.removeItem(GUEST_PROJECT_ID_KEY);
                 navigate(`/blueprint/${guestProjectId}`, {
                     state: { claimed: true },
@@ -111,8 +114,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const register = useCallback(
         async (data: RegisterPayload) => {
-            await api.post("/api/register", data);
-            await fetchUser(() => true); // Bu aşamada component'in mount olduğunu varsayabiliriz.
+            await apiRegister(data);
+            await fetchUser(() => true);
             await handlePostAuth();
         },
         [fetchUser, handlePostAuth]
@@ -120,8 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = useCallback(
         async (data: LoginPayload) => {
-            await api.post("/api/login", data);
-            await fetchUser(() => true); // Bu aşamada component'in mount olduğunu varsayabiliriz.
+            await apiLogin(data);
+            await fetchUser(() => true);
             await handlePostAuth();
         },
         [fetchUser, handlePostAuth]
@@ -129,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = useCallback(async () => {
         try {
-            await api.post("/api/logout");
+            await apiLogout();
         } catch (error) {
             console.error("Logout request failed:", error);
         } finally {

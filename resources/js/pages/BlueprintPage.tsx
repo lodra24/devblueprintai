@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import api from "../api";
+import { getProject } from "../api"; // Named import'a geçildi
 import { useAuth } from "../contexts/AuthContext";
 import AuthCallToAction from "../components/AuthCallToAction";
 import { GUEST_PROJECT_ID_KEY } from "../constants";
@@ -14,7 +14,7 @@ interface Project {
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
-    const location = useLocation(); // Yönlendirme state'ini okumak için
+    const location = useLocation();
     const [project, setProject] = useState<Project | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,12 +24,9 @@ function BlueprintPage() {
     const [isGuestProject, setIsGuestProject] = useState(false);
 
     useEffect(() => {
-        // Yönlendirme ile gelen 'claimed' state'ini kontrol et
         if (location.state?.claimed) {
             setShowClaimSuccess(true);
-            // Birkaç saniye sonra bildirimi kaldır
             const timer = setTimeout(() => setShowClaimSuccess(false), 5000);
-            // Component unmount olursa timer'ı temizle
             return () => clearTimeout(timer);
         }
     }, [location.state]);
@@ -42,8 +39,9 @@ function BlueprintPage() {
             setError(null);
 
             try {
-                const response = await api.get(`/api/projects/${projectId}`);
-                setProject(response.data);
+                // Doğrudan 'getProject' fonksiyonunu kullanıyoruz
+                const projectData = await getProject(projectId);
+                setProject(projectData);
             } catch (err: any) {
                 console.error("Failed to fetch project data:", err);
                 setError(
@@ -55,7 +53,7 @@ function BlueprintPage() {
             }
         };
 
-        fetchProjectData();
+        void fetchProjectData();
 
         const guestProjectId = localStorage.getItem(GUEST_PROJECT_ID_KEY);
         if (guestProjectId && guestProjectId === projectId) {
@@ -88,7 +86,6 @@ function BlueprintPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
-            {/* Başarı Bildirimi */}
             {showClaimSuccess && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md rounded-lg bg-green-500/90 p-4 text-white shadow-lg backdrop-blur-sm animate-fade-in-down">
                     <p className="text-center font-semibold">
