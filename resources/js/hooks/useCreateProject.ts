@@ -1,11 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { createProject } from "../api";
-import { GUEST_PROJECT_ID_KEY } from "../constants";
+import { createProject } from "@/api";
+import { GUEST_PROJECT_ID_KEY } from "@/constants";
 
+// Type updated from 'prompt' to 'idea_text'
 type CreateProjectPayload = {
     name: string;
-    prompt: string;
+    idea_text: string;
 };
 
 export const useCreateProject = () => {

@@ -14,27 +14,15 @@ class GenerateBlueprintJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * The project ID.
-     *
-     * @var int
-     */
     public string $projectId;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(string $projectId)
     {
         $this->projectId = $projectId;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        // Görevin hangi proje için çalıştığını bul
         $project = Project::find($this->projectId);
 
         if (!$project) {
@@ -42,18 +30,36 @@ class GenerateBlueprintJob implements ShouldQueue
             return;
         }
 
-        // --- YAPAY ZEKA MANTIĞI GELECEKTE BURAYA EKLENECEK ---
-        // Şimdilik sadece log tutarak ve durumu güncelleyerek simüle edelim
-        Log::info("Generating blueprint for project: {$project->name} (ID: {$this->projectId})");
-        
-        // Simülasyon için 5 saniye bekletelim
-        sleep(5);
+        try {
+            // Initial update
+            $project->update(['status' => 'generating', 'progress' => 10]);
+            Log::info("Generating blueprint for project: {$project->name} (ID: {$this->projectId})");
 
-        // İşlem bittiğinde projenin durumunu güncelleyelim
-        $project->status = 'completed';
-        $project->blueprint = ['epics' => ['// TODO: AI generated content will be here']]; // Örnek veri
-        $project->save();
+            // --- AI LOGIC SIMULATION ---
+            sleep(2); // Simulate first part of the generation
+            $project->update(['progress' => 50]);
 
-        Log::info("Blueprint generation completed for project ID: {$this->projectId}");
+            sleep(3); // Simulate second part of the generation
+            // --- END OF SIMULATION ---
+
+            // Final update on success
+            $project->update([
+                'status' => 'completed',
+                'progress' => 100,
+                'blueprint' => ['epics' => ['// TODO: AI generated content will be here']]
+            ]);
+
+            Log::info("Blueprint generation completed for project ID: {$this->projectId}");
+
+        } catch (\Throwable $e) {
+            // Update on failure
+            if (isset($project)) {
+                $project->update(['status' => 'failed', 'progress' => 0]);
+            }
+            Log::error("Blueprint generation failed for project ID: {$this->projectId}. Error: {$e->getMessage()}");
+            
+            // Re-throw the exception to let the queue worker handle the failure
+            throw $e;
+        }
     }
 }

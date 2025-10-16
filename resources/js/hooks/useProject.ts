@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getProject } from "../api";
-import { qk } from "../lib/queryKeys";
+import { getProject } from "@/api";
+import { qk } from "@/lib/queryKeys";
 
 // Proje verilerini çekmek için custom hook
 export const useProject = (projectId?: string) => {

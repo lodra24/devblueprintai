@@ -71,7 +71,7 @@ function BlueprintPage() {
                     {project?.name}
                 </h1>
                 <p className="mt-2 text-md text-gray-400 italic">
-                    Prompt: "{project?.prompt}"
+                    Idea: "{project?.idea_text ?? "No idea provided yet."}"
                 </p>
                 <div className="mt-6 p-4 bg-white/5 rounded-lg">
                     <p className="text-lg">

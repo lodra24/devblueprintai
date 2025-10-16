@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { useCreateProject } from "../hooks/useCreateProject";
+import { useCreateProject } from "@/hooks/useCreateProject";
 
 function HomePage() {
     const [name, setName] = useState("");
-    const [prompt, setPrompt] = useState("");
+    const [idea_text, setIdeaText] = useState(""); // Changed from 'prompt' to 'idea_text'
 
     const createProjectMutation = useCreateProject();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-        createProjectMutation.mutate({ name, prompt });
+        // Pass 'idea_text' to the mutation
+        createProjectMutation.mutate({ name, idea_text });
     };
 
     const isLoading = createProjectMutation.isPending;
@@ -52,17 +52,17 @@ function HomePage() {
 
                     <div>
                         <label
-                            htmlFor="prompt"
+                            htmlFor="idea_text" // Changed from 'prompt'
                             className="block text-sm font-medium text-gray-300 mb-2"
                         >
                             Your Project Idea (in one sentence)
                         </label>
                         <textarea
-                            id="prompt"
-                            name="prompt"
+                            id="idea_text" // Changed from 'prompt'
+                            name="idea_text" // Changed from 'prompt'
                             rows={4}
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
+                            value={idea_text}
+                            onChange={(e) => setIdeaText(e.target.value)}
                             required
                             className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
                             placeholder="A platform where users can print and sell their own designs on t-shirts..."
@@ -72,7 +72,6 @@ function HomePage() {
 
                     {error && (
                         <div className="rounded-md bg-red-500/20 p-4">
-                            {/* Axios hatası ise içindeki message'ı, değilse genel mesajı göster */}
                             <p className="text-sm text-red-400">
                                 {(error as any).response?.data?.message ||
                                     "An unexpected error occurred."}

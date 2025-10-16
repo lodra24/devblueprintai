@@ -27,10 +27,9 @@ class StoreProjectRequest extends FormRequest
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'prompt' => ['required', 'string', 'max:5000'],
+            'idea_text' => ['required', 'string', 'max:5000'], // Added validation for idea_text
         ];
 
-        // Benzersizlik kuralını SADECE kullanıcı giriş yapmışsa uygula.
         if ($userId) {
             $rules['name'][] = Rule::unique('projects')->where('user_id', $userId);
         }

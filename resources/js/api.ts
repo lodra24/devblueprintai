@@ -1,13 +1,13 @@
 import { http, ensureCsrf } from "./lib/http";
 import { AxiosError } from "axios";
 
-// --- Proje Endpoint'leri ---
-
-export const createProject = async (data: { name: string; prompt: string }) => {
+// The 'data' parameter type is now updated to expect 'idea_text' instead of 'prompt'.
+export const createProject = async (data: {
+    name: string;
+    idea_text: string;
+}) => {
     await ensureCsrf();
     const response = await http.post("/projects", data);
-    // Genellikle Laravel API resource'ları veriyi bir 'data' anahtarı içinde sarmalar.
-    // Burada doğrudan response.data'yı dönerek React Query'nin işini kolaylaştırıyoruz.
     return response.data;
 };
 
@@ -24,22 +24,14 @@ export const claimProject = async (projectId: string) => {
     return response.data;
 };
 
-// --- Kimlik Doğrulama Endpoint'leri ---
-
 export const getUser = async () => {
     try {
         const response = await http.get("/user");
         return response.data;
     } catch (error) {
-        // Eğer hata bir Axios hatası ise ve durumu 401 ise, bu beklenen bir durum
-        // (kullanıcı giriş yapmamış). Bu durumda null dönerek "kullanıcı yok" diyoruz.
         if (error instanceof AxiosError && error.response?.status === 401) {
             return null;
         }
-
-        // Diğer tüm hataları (500, network hatası vb.) tekrar fırlat.
-        // Bu, React Query'nin 'error' durumuna geçmesini ve 'retry' mantığını
-        // çalıştırmasını sağlar.
         throw error;
     }
 };
