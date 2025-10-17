@@ -59,10 +59,36 @@ class AiGenerationService
         return Http::withHeaders($headers)
             ->baseUrl($baseUrl)
             ->timeout($this->config['timeout'])
-            ->retry(3, 1000, function ($exception) {
-                return $exception instanceof ConnectionException ||
-                       ($exception instanceof RequestException && in_array($exception->response->status(), [429, 500, 502, 503, 504]));
-            }, throw: false);
+            ->retry(
+                4,
+                function (int $attempt, $exception) {
+                    // Respect Retry-After for 429 when available
+                    if ($exception instanceof RequestException && $exception->response && $exception->response->status() === 429) {
+                        $retryAfter = $exception->response->header('Retry-After');
+                        if ($retryAfter !== null && $retryAfter !== '') {
+                            if (is_numeric($retryAfter)) {
+                                return (int) $retryAfter * 1000;
+                            }
+                            $ts = strtotime($retryAfter);
+                            if ($ts) {
+                                $ms = max(100, ($ts - time()) * 1000);
+                                return min($ms, 15000);
+                            }
+                        }
+                    }
+
+                    // Exponential backoff with jitter
+                    $base = 500 * (2 ** max(0, $attempt - 1)); // 500, 1000, 2000, 4000
+                    $jitter = random_int(-100, 100);
+                    return min(max(100, $base + $jitter), 15000);
+                },
+                function ($exception) {
+                    return $exception instanceof ConnectionException
+                        || ($exception instanceof RequestException
+                            && in_array($exception->response?->status(), [429, 500, 502, 503, 504]));
+                },
+                throw: false
+            );
     }
 
     /**
@@ -156,6 +182,25 @@ class AiGenerationService
      */
     protected function logAiRun(Project $project, string $promptHash, array $requestBody, ?\Illuminate\Http\Client\Response $response, float $latency, string $status, ?string $errorMessage = null, ?string $rawMarkdown = null): void
     {
+        // Extract usage per provider when available
+        $usage = null;
+        $statusCode = null;
+        $finishReason = null;
+        if ($status === 'success' && $response) {
+            $provider = config('ai.provider');
+            $statusCode = $response->status();
+            if ($provider === 'google') {
+                $usage = $response->json('usageMetadata', []) ?: null;
+                $finishReason = $response->json('candidates.0.finishReason');
+            } elseif ($provider === 'openai') {
+                $usage = $response->json('usage', []) ?: null;
+                $finishReason = $response->json('choices.0.finish_reason');
+            }
+        } elseif ($response) {
+            // Failed but we have a response object
+            $statusCode = $response->status();
+        }
+
         $project->aiRuns()->create([
             'provider' => config('ai.provider'),
             'model' => $this->config['model'],
@@ -163,10 +208,12 @@ class AiGenerationService
             'request_payload' => json_encode($requestBody),
             'response_payload' => null, // We no longer store the full response body
             'raw_markdown' => $rawMarkdown,
-            'usage' => $status === 'success' && $response ? $response->json('usageMetadata', []) : null,
+            'usage' => $usage,
             'status' => $status,
             'error_message' => $errorMessage,
             'latency_ms' => round($latency * 1000),
+            'status_code' => $statusCode,
+            'finish_reason' => $finishReason,
         ]);
     }
 
