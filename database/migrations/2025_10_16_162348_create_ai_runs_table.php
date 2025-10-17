@@ -22,6 +22,7 @@ return new class extends Migration
             $table->jsonb('usage')->nullable(); // To store token counts like { "prompt_tokens": 100, "completion_tokens": 200 }
             $table->string('status'); // e.g., success, failed
             $table->text('error_message')->nullable();
+            $table->unsignedInteger('latency_ms')->nullable();
             $table->timestamps();
         });
     }

@@ -38,4 +38,12 @@ class Project extends Model
     {
         return $this->hasMany(Epic::class)->orderBy('position');
     }
+
+    /**
+     * Get the AI runs for the project.
+     */
+    public function aiRuns(): HasMany
+    {
+        return $this->hasMany(AiRun::class);
+    }
 }
