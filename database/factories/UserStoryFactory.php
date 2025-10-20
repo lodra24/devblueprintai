@@ -23,6 +23,8 @@ class UserStoryFactory extends Factory
             'status' => $this->faker->randomElement(['todo', 'in_progress', 'done']),
             'priority' => $this->faker->randomElement(['low', 'medium', 'high']),
             'position' => $this->faker->unique()->randomNumber(),
+            'is_ai_generated' => false,
+            'origin_prompt_hash' => null,
         ];
     }
 }

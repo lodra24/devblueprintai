@@ -13,6 +13,13 @@ class UserStory extends Model
 
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'is_ai_generated' => 'boolean',
+        ];
+    }
+
     /**
      * Get the epic that the user story belongs to.
      */

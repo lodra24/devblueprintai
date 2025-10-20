@@ -2,27 +2,35 @@
 
 namespace App\Jobs;
 
+use App\Enums\ProjectStatus;
+use App\Events\BlueprintGenerated;
+use App\Events\BlueprintStatusUpdated;
 use App\Models\Project;
+use App\Services\AiGenerationService;
+use App\Services\BlueprintPersistenceService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class GenerateBlueprintJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    public string $projectId;
-
-    public function __construct(string $projectId)
+    public function __construct(public string $projectId)
     {
-        $this->projectId = $projectId;
     }
 
-    public function handle(): void
-    {
+    public function handle(
+        AiGenerationService $aiService,
+        BlueprintPersistenceService $persistenceService
+    ): void {
         $project = Project::find($this->projectId);
 
         if (!$project) {
@@ -30,36 +38,44 @@ class GenerateBlueprintJob implements ShouldQueue
             return;
         }
 
+        $promptHash = $aiService->calculatePromptHash($project);
+
         try {
-            // Initial update
-            $project->update(['status' => 'generating', 'progress' => 10]);
+            $this->updateProject($project, ProjectStatus::Generating, 10, 'generating');
             Log::info("Generating blueprint for project: {$project->name} (ID: {$this->projectId})");
 
-            // --- AI LOGIC SIMULATION ---
-            sleep(2); // Simulate first part of the generation
-            $project->update(['progress' => 50]);
+            $rawMarkdown = $aiService->generate($project);
+            $this->updateProject($project, ProjectStatus::Generating, 50, 'generating');
+            Log::info("AI generation complete for project ID: {$this->projectId}. Now persisting.");
 
-            sleep(3); // Simulate second part of the generation
-            // --- END OF SIMULATION ---
+            $this->updateProject($project, ProjectStatus::Parsing, 65, 'parsing');
+            $persistenceService->persist($project, $rawMarkdown, $promptHash);
+            $this->updateProject($project, ProjectStatus::Parsing, 90, 'parsing');
+            Log::info("Persistence complete for project ID: {$this->projectId}.");
 
-            // Final update on success
-            $project->update([
-                'status' => 'completed',
-                'progress' => 100,
-                'blueprint' => ['epics' => ['// TODO: AI generated content will be here']]
-            ]);
-
-            Log::info("Blueprint generation completed for project ID: {$this->projectId}");
-
-        } catch (\Throwable $e) {
-            // Update on failure
-            if (isset($project)) {
-                $project->update(['status' => 'failed', 'progress' => 0]);
-            }
+            $this->updateProject($project, ProjectStatus::Ready, 100, 'ready');
+            BlueprintGenerated::dispatch($project->fresh(), $promptHash);
+            Log::info("Blueprint generation fully completed for project ID: {$this->projectId}");
+        } catch (Throwable $e) {
+            $this->updateProject($project, ProjectStatus::Failed, 0, 'failed', $e->getMessage());
             Log::error("Blueprint generation failed for project ID: {$this->projectId}. Error: {$e->getMessage()}");
-            
-            // Re-throw the exception to let the queue worker handle the failure
+
             throw $e;
         }
+    }
+
+    private function updateProject(
+        Project $project,
+        ProjectStatus $status,
+        int $progress,
+        string $stage,
+        ?string $message = null
+    ): void {
+        $project->forceFill([
+            'status' => $status,
+            'progress' => $progress,
+        ])->save();
+
+        BlueprintStatusUpdated::dispatch($project->fresh(), $status, $progress, $stage, $message);
     }
 }

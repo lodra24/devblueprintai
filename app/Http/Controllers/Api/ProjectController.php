@@ -8,6 +8,7 @@ use App\Jobs\GenerateBlueprintJob;
 use App\Models\Project;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\ProjectStatus;
 
 class ProjectController extends Controller
 {
@@ -25,7 +26,7 @@ class ProjectController extends Controller
         $project->name = $validated['name'];
         $project->idea_text = $validated['idea_text']; // Save idea_text
         $project->user_id = $userId;
-        $project->status = 'generating'; // Set initial status
+        $project->status = ProjectStatus::Generating; // Set initial status
         $project->progress = 0; // Set initial progress
         $project->save();
 

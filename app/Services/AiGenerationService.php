@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\AiGenerationException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use App\Models\Project;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\PendingRequest;
@@ -98,8 +99,8 @@ class AiGenerationService
      */
     public function generate(Project $project): string
     {
-        $prompt = $this->buildPrompt($project);
-        $promptHash = sha1($prompt);
+        $prompt = $this->makePrompt($project);
+        $promptHash = $this->calculatePromptHash($project, $prompt);
 
         $existingRun = $project->aiRuns()
             ->where('prompt_hash', $promptHash)
@@ -170,6 +171,21 @@ class AiGenerationService
         }
     }
     /**
+     * Expose the prompt used for AI generation.
+     */
+    public function makePrompt(Project $project): string
+    {
+        return $this->buildPrompt($project);
+    }
+
+    public function calculatePromptHash(Project $project, ?string $prompt = null): string
+    {
+        $prompt ??= $this->makePrompt($project);
+
+        return sha1($prompt);
+    }
+
+    /**
      * Constructs the prompt from the project's idea.
      */
     protected function buildPrompt(Project $project): string
@@ -180,7 +196,7 @@ class AiGenerationService
     /**
      * Logs the AI API call details to the database.
      */
-    protected function logAiRun(Project $project, string $promptHash, array $requestBody, ?\Illuminate\Http\Client\Response $response, float $latency, string $status, ?string $errorMessage = null, ?string $rawMarkdown = null): void
+    protected function logAiRun(Project $project, string $promptHash, array $requestBody, ? Response $response, float $latency, string $status, ?string $errorMessage = null, ?string $rawMarkdown = null): void
     {
         // Extract usage per provider when available
         $usage = null;

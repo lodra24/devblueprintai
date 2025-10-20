@@ -21,6 +21,8 @@ class EpicFactory extends Factory
             'project_id' => Project::factory(),
             'title' => $this->faker->bs(),
             'position' => $this->faker->unique()->randomNumber(),
+            'is_ai_generated' => false,
+            'origin_prompt_hash' => null,
         ];
     }
 }

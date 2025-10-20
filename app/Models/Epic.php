@@ -14,6 +14,13 @@ class Epic extends Model
 
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'is_ai_generated' => 'boolean',
+        ];
+    }
+
     /**
      * Get the project that the epic belongs to.
      */
