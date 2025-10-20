@@ -1,13 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { getProject } from "@/api";
 import { qk } from "@/lib/queryKeys";
+import { Project, ProjectStatus } from "@/types";
 
-// Proje verilerini çekmek için custom hook
-export const useProject = (projectId?: string) => {
-    return useQuery({
+const POLLING_INTERVAL_MS = 5000;
+
+const shouldPollStatus = (status?: ProjectStatus): boolean => {
+    return status === "generating" || status === "parsing";
+};
+
+export const useProject = (
+    projectId?: string
+): UseQueryResult<Project, AxiosError> => {
+    return useQuery<Project, AxiosError>({
         queryKey: projectId
             ? qk.projects.detail(projectId)
-            : (["projects", "detail", "pending"] as const),
+            : qk.projects.pending(),
         queryFn: async () => {
             if (!projectId) {
                 throw new Error("projectId is required");
@@ -15,5 +24,11 @@ export const useProject = (projectId?: string) => {
             return getProject(projectId);
         },
         enabled: !!projectId,
+        refetchInterval: (query) => {
+            const project = query.state.data;
+            return project && shouldPollStatus(project.status)
+                ? POLLING_INTERVAL_MS
+                : false;
+        },
     });
 };
