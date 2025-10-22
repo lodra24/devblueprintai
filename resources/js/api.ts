@@ -1,7 +1,19 @@
 import { http, ensureCsrf } from "./lib/http";
 import { AxiosError } from "axios";
+import { Project } from "./types";
 
-// The 'data' parameter type is now updated to expect 'idea_text' instead of 'prompt'.
+type ResourceResponse<T> = {
+    data: T;
+};
+
+const unwrapResource = <T>(payload: ResourceResponse<T> | T): T => {
+    if (payload !== null && typeof payload === "object" && "data" in payload) {
+        return (payload as ResourceResponse<T>).data;
+    }
+
+    return payload as T;
+};
+
 export const createProject = async (data: {
     name: string;
     idea_text: string;
@@ -11,9 +23,13 @@ export const createProject = async (data: {
     return response.data;
 };
 
-export const getProject = async (projectId: string) => {
-    const response = await http.get(`/projects/${projectId}`);
-    return response.data;
+export const getProject = async (
+    projectId: string
+): Promise<Project> => {
+    const response =
+        await http.get<ResourceResponse<Project>>(`/projects/${projectId}`);
+
+    return unwrapResource(response.data);
 };
 
 export const claimProject = async (projectId: string) => {

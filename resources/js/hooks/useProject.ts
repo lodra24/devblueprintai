@@ -1,4 +1,8 @@
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+    useQuery,
+    UseQueryResult,
+    keepPreviousData,
+} from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { getProject } from "@/api";
 import { qk } from "@/lib/queryKeys";
@@ -7,7 +11,8 @@ import { Project, ProjectStatus } from "@/types";
 const POLLING_INTERVAL_MS = 5000;
 
 const shouldPollStatus = (status?: ProjectStatus): boolean => {
-    return status === "generating" || status === "parsing";
+    if (!status) return false;
+    return ["generating", "parsing"].includes(status);
 };
 
 export const useProject = (
@@ -30,5 +35,6 @@ export const useProject = (
                 ? POLLING_INTERVAL_MS
                 : false;
         },
+        placeholderData: keepPreviousData,
     });
 };

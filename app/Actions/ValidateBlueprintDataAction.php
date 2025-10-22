@@ -37,7 +37,8 @@ class ValidateBlueprintDataAction
                 'required_with:schema_suggestions.*.columns',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9_:\s]+$/'
+                // Column name plus optional type/qualifiers e.g. "name varchar", "id bigint:pk", "email varchar unique"
+                'regex:/^[a-z_][a-z0-9_]*(\s+(?:[a-z_][a-z0-9_]*(?:\(\d+\))?)(?:[:\s][a-z_][a-z0-9_]*(?:\(\d+\))?)*)?$/i'
             ],
         ]);
 
