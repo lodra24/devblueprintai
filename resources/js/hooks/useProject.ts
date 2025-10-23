@@ -35,6 +35,8 @@ export const useProject = (
                 ? POLLING_INTERVAL_MS
                 : false;
         },
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
         placeholderData: keepPreviousData,
     });
 };

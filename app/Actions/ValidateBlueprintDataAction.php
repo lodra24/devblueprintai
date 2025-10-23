@@ -21,7 +21,7 @@ class ValidateBlueprintDataAction
             'epics' => ['present', 'array', 'max:50'],
             'epics.*.title' => ['required', 'string', 'max:255', 'distinct'],
             'epics.*.stories' => ['present', 'array', 'max:200'],
-            'epics.*.stories.*.content' => ['required', 'string', 'max:1000', 'distinct'],
+            'epics.*.stories.*.content' => ['required', 'string', 'max:1000'],
             'epics.*.stories.*.priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high'])],
             'epics.*.stories.*.status' => ['sometimes', 'string', Rule::in(['todo', 'in_progress', 'done'])],
 
