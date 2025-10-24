@@ -1,7 +1,10 @@
 <?php
 
-use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ClaimProjectController;
+use App\Http\Controllers\Api\EpicController;
+use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ReorderUserStoryController;
+use App\Http\Controllers\Api\UserStoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -23,8 +26,15 @@ Route::apiResource('projects', ProjectController::class)->only([
 
 Route::post('/projects/claim', [ClaimProjectController::class, '__invoke'])->middleware('auth:sanctum')->name('projects.claim');
 
+// --- CRUD & Reorder Routes ---
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('epics', EpicController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('user-stories', UserStoryController::class)->only(['store', 'update', 'destroy']);
+    Route::post('/user-stories/reorder', ReorderUserStoryController::class)->name('user-stories.reorder');
+});
 
-// --- Kimlik Doğrulama Rotaları ---
+
+// --- Auth Routes ---
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('guest:sanctum')
@@ -53,5 +63,3 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth:sanctum')
     ->name('logout');
-
-

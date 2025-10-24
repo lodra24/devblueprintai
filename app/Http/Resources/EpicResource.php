@@ -18,6 +18,7 @@ class EpicResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'position' => $this->position,
+            'is_ai_generated' => $this->is_ai_generated,
             'user_stories' => UserStoryResource::collection($this->whenLoaded('userStories')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

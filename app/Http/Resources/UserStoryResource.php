@@ -20,6 +20,7 @@ class UserStoryResource extends JsonResource
             'status' => $this->status,
             'priority' => $this->priority,
             'position' => $this->position,
+            'is_ai_generated' => $this->is_ai_generated,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

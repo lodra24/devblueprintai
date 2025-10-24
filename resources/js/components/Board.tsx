@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
     DndContext,
     closestCenter,
@@ -11,44 +11,128 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Project, Epic, UserStory } from "@/types";
 import Column from "./Column";
+import { useReorderUserStory } from "@/hooks/useUserStoryMutations";
+import Card from "./Card";
 
 interface BoardProps {
-    project: Project | undefined;
+    project: Project;
 }
 
-type ActiveStory = {
+type StoryLocation = {
     story: UserStory;
-    epicId: string;
+    epic: Epic;
+    index: number;
 };
 
-const cloneEpics = (source: Epic[] = []): Epic[] =>
-    source.map((epic) => ({
-        ...epic,
-        user_stories: epic.user_stories.map((story) => ({ ...story })),
-    }));
-
-const findStoryById = (epics: Epic[], storyId: string): ActiveStory | null => {
+const findStoryLocation = (
+    epics: Epic[],
+    storyId: string
+): StoryLocation | null => {
     for (const epic of epics) {
-        const story = epic.user_stories.find((item) => item.id === storyId);
-        if (story) {
-            return { story, epicId: epic.id };
+        const index = epic.user_stories.findIndex((item) => item.id === storyId);
+        if (index !== -1) {
+            return {
+                story: epic.user_stories[index],
+                epic,
+                index,
+            };
         }
     }
     return null;
 };
 
-const Board: React.FC<BoardProps> = ({ project }) => {
-    const [epics, setEpics] = useState<Epic[]>(() =>
-        cloneEpics(project?.epics ?? [])
-    );
-    const [activeStory, setActiveStory] = useState<ActiveStory | null>(null);
+type ReorderIntent = {
+    storyId: string;
+    targetEpicId: string;
+    beforeStoryId: string | null;
+    afterStoryId: string | null;
+};
 
-    useEffect(() => {
-        setEpics(cloneEpics(project?.epics ?? []));
-    }, [project]);
+const resolveReorderIntent = (
+    event: DragEndEvent,
+    project: Project
+): ReorderIntent | null => {
+    const { active, over } = event;
+
+    if (!over) {
+        return null;
+    }
+
+    const storyId = String(active.id);
+    const source = findStoryLocation(project.epics, storyId);
+
+    if (!source) {
+        return null;
+    }
+
+    const sortableData = over.data.current?.sortable;
+    const targetEpicId =
+        (typeof sortableData?.containerId === "string"
+            ? sortableData.containerId
+            : undefined) ?? String(over.id);
+
+    if (sortableData && String(over.id) === storyId) {
+        return null;
+    }
+
+    const targetEpic = project.epics.find((epic) => epic.id === targetEpicId);
+
+    if (!targetEpic) {
+        return null;
+    }
+
+    const reorderedIds = targetEpic.user_stories
+        .map((story) => story.id)
+        .filter((id) => id !== storyId);
+
+    let insertionIndex = reorderedIds.length;
+
+    if (sortableData) {
+        const hoveredStoryId = String(over.id);
+        const hoverIndex = reorderedIds.indexOf(hoveredStoryId);
+
+        if (hoverIndex !== -1) {
+            insertionIndex = hoverIndex;
+        }
+    }
+
+    reorderedIds.splice(insertionIndex, 0, storyId);
+
+    const beforeStoryId = reorderedIds[insertionIndex + 1] ?? null;
+    const afterStoryId = reorderedIds[insertionIndex - 1] ?? null;
+
+    if (targetEpicId === source.epic.id) {
+        const currentAfter =
+            source.index === 0
+                ? null
+                : source.epic.user_stories[source.index - 1]?.id ?? null;
+        const currentBefore =
+            source.index === source.epic.user_stories.length - 1
+                ? null
+                : source.epic.user_stories[source.index + 1]?.id ?? null;
+
+        const stayingInPlace =
+            currentAfter === afterStoryId && currentBefore === beforeStoryId;
+
+        if (stayingInPlace) {
+            return null;
+        }
+    }
+
+    return {
+        storyId,
+        targetEpicId,
+        beforeStoryId,
+        afterStoryId,
+    };
+};
+
+const Board: React.FC<BoardProps> = ({ project }) => {
+    const [activeStory, setActiveStory] = useState<UserStory | null>(null);
+    const reorderMutation = useReorderUserStory();
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -63,131 +147,30 @@ const Board: React.FC<BoardProps> = ({ project }) => {
 
     const handleDragStart = (event: DragStartEvent) => {
         const storyId = String(event.active.id);
-        const story = findStoryById(epics, storyId);
-        setActiveStory(story);
+        const location = findStoryLocation(project.epics, storyId);
+
+        if (location) {
+            setActiveStory(location.story);
+        }
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveStory(null);
+        const intent = resolveReorderIntent(event, project);
+
+        if (!intent) {
+            return;
+        }
+
+        reorderMutation.mutate({
+            projectId: project.id,
+            ...intent,
+        });
     };
 
     const handleDragCancel = (_event: DragCancelEvent) => {
         setActiveStory(null);
     };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        setActiveStory(null);
-
-        if (!over || active.id === over.id) {
-            return;
-        }
-
-        const activeId = String(active.id);
-        const overId = String(over.id);
-
-        const activeContainerId =
-            (active.data.current?.sortable?.containerId as string | undefined) ??
-            (active.data.current as { epicId?: string } | undefined)?.epicId;
-        const overContainerId =
-            (over.data.current?.sortable?.containerId as string | undefined) ??
-            (typeof over.id === "string" ? over.id : overId);
-
-        if (!activeContainerId || !overContainerId) {
-            return;
-        }
-
-        setEpics((prevEpics) => {
-            const sourceEpicIndex = prevEpics.findIndex(
-                (epic) => epic.id === activeContainerId
-            );
-            const targetEpicIndex = prevEpics.findIndex(
-                (epic) => epic.id === overContainerId
-            );
-
-            if (sourceEpicIndex === -1 || targetEpicIndex === -1) {
-                return prevEpics;
-            }
-
-            const sourceEpic = prevEpics[sourceEpicIndex];
-            const targetEpic = prevEpics[targetEpicIndex];
-
-            const activeStoryIndex = sourceEpic.user_stories.findIndex(
-                (story) => story.id === activeId
-            );
-
-            if (activeStoryIndex === -1) {
-                return prevEpics;
-            }
-
-            const overIndexFromContext =
-                over.data.current?.sortable?.index ?? null;
-
-            let targetIndex = targetEpic.user_stories.findIndex(
-                (story) => story.id === overId
-            );
-
-            if (targetIndex === -1) {
-                targetIndex =
-                    typeof overIndexFromContext === "number"
-                        ? overIndexFromContext
-                        : targetEpic.user_stories.length;
-            }
-
-            if (sourceEpic.id === targetEpic.id) {
-                const safeTargetIndex =
-                    targetIndex >= sourceEpic.user_stories.length
-                        ? sourceEpic.user_stories.length - 1
-                        : targetIndex;
-
-                if (
-                    safeTargetIndex === -1 ||
-                    safeTargetIndex === activeStoryIndex
-                ) {
-                    return prevEpics;
-                }
-
-                const updatedStories = arrayMove(
-                    sourceEpic.user_stories,
-                    activeStoryIndex,
-                    safeTargetIndex
-                );
-
-                if (updatedStories === sourceEpic.user_stories) {
-                    return prevEpics;
-                }
-
-                return prevEpics.map((epic, index) =>
-                    index === sourceEpicIndex
-                        ? { ...epic, user_stories: updatedStories }
-                        : epic
-                );
-            }
-
-            const nextEpics = prevEpics.map((epic) => ({
-                ...epic,
-                user_stories: [...epic.user_stories],
-            }));
-
-            const sourceStories = nextEpics[sourceEpicIndex].user_stories;
-            const targetStories = nextEpics[targetEpicIndex].user_stories;
-
-            const [movedStory] = sourceStories.splice(activeStoryIndex, 1);
-
-            if (!movedStory) {
-                return prevEpics;
-            }
-
-            const insertionIndex = Math.min(targetIndex, targetStories.length);
-            targetStories.splice(insertionIndex, 0, movedStory);
-
-            return nextEpics;
-        });
-    };
-
-    if (!project || !epics || epics.length === 0) {
-        return (
-            <div className="mt-8 text-center text-gray-400">
-                No epics or stories to display for this project.
-            </div>
-        );
-    }
 
     return (
         <DndContext
@@ -198,15 +181,15 @@ const Board: React.FC<BoardProps> = ({ project }) => {
             onDragCancel={handleDragCancel}
         >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 items-start">
-                {epics.map((epic) => (
+                {project.epics.map((epic) => (
                     <Column key={epic.id} epic={epic} />
                 ))}
             </div>
             <DragOverlay>
                 {activeStory ? (
-                    <div className="p-4 bg-gray-800 rounded-lg shadow-md">
+                    <div className="p-4 bg-gray-800 rounded-lg shadow-md cursor-grabbing">
                         <p className="text-sm text-gray-200">
-                            {activeStory.story.content}
+                            {activeStory.content}
                         </p>
                     </div>
                 ) : null}
