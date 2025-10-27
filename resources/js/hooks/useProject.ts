@@ -19,9 +19,7 @@ export const useProject = (
     projectId?: string
 ): UseQueryResult<Project, AxiosError> => {
     return useQuery<Project, AxiosError>({
-        queryKey: projectId
-            ? qk.projects.detail(projectId)
-            : qk.projects.pending(),
+        queryKey: projectId ? qk.project(projectId) : qk.projectPending(),
         queryFn: async () => {
             if (!projectId) {
                 throw new Error("projectId is required");

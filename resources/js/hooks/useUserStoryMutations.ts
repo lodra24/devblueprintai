@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys as qk } from "@/lib/queryKeys";
-import { Project, Epic, UserStory } from "@/types";
+import { qk } from "@/lib/queryKeys";
+import { Project, UserStory } from "@/types";
 import { http, ensureCsrf } from "@/lib/http";
 import { produce } from "immer";
-import { arrayMove } from "@dnd-kit/sortable";
 
 // --- API Fonksiyonları ---
 
@@ -66,7 +65,7 @@ const findStoryAndEpic = (project: Project, storyId: string) => {
 
 export const useCreateUserStory = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: createUserStory,
@@ -116,7 +115,7 @@ export const useCreateUserStory = (projectId: string) => {
 
 export const useUpdateUserStory = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: updateUserStory,
@@ -130,8 +129,15 @@ export const useUpdateUserStory = (projectId: string) => {
             const optimisticProject = produce(previousProject, (draft) => {
                 const storyLocation = findStoryAndEpic(draft, payload.storyId);
                 if (storyLocation) {
+                    const { storyId, ...rest } = payload;
+                    const definedUpdates = Object.fromEntries(
+                        Object.entries(rest).filter(
+                            ([, value]) => value !== undefined
+                        )
+                    ) as Partial<UserStory>;
+
                     Object.assign(storyLocation.story, {
-                        ...payload,
+                        ...definedUpdates,
                         is_ai_generated: false,
                     });
                 }
@@ -155,7 +161,7 @@ export const useUpdateUserStory = (projectId: string) => {
 
 export const useDeleteUserStory = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: deleteUserStory,
@@ -198,7 +204,7 @@ export const useReorderUserStory = () => {
     return useMutation({
         mutationFn: reorderUserStory,
         onMutate: async (payload) => {
-            const projectQueryKey = qk.projects.detail(payload.projectId);
+            const projectQueryKey = qk.project(payload.projectId);
             await queryClient.cancelQueries({ queryKey: projectQueryKey });
             const previousProject =
                 queryClient.getQueryData<Project>(projectQueryKey);

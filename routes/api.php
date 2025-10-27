@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('epics', EpicController::class)->only(['store', 'update', 'destroy']);
     Route::apiResource('user-stories', UserStoryController::class)->only(['store', 'update', 'destroy']);
     Route::post('/user-stories/reorder', ReorderUserStoryController::class)->name('user-stories.reorder');
+    Route::get('/my-projects', [ProjectController::class, 'myProjects'])->name('projects.my');
 });
 
 

@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProjectResource extends JsonResource
+class ProjectSummaryResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -15,18 +14,11 @@ class ProjectResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $epics = collect();
-        if ($this->resource instanceof Model && $this->resource->relationLoaded('epics')) {
-            $epics = $this->resource->getRelation('epics');
-        }
-
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'idea_text' => $this->idea_text,
             'status' => $this->status,
             'progress' => $this->progress,
-            'epics' => EpicResource::collection($epics),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

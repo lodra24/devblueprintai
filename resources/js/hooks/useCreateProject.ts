@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createProject } from "@/api";
 import { GUEST_PROJECT_ID_KEY } from "@/constants";
+import { routeUrls } from "@/routes";
 
 // Type updated from 'prompt' to 'idea_text'
 type CreateProjectPayload = {
@@ -19,7 +20,7 @@ export const useCreateProject = () => {
             if (data.project_id) {
                 const projectId = data.project_id;
                 localStorage.setItem(GUEST_PROJECT_ID_KEY, projectId);
-                navigate(`/blueprint/${projectId}`);
+                navigate(routeUrls.blueprint(projectId));
             }
         },
         onError: (error) => {

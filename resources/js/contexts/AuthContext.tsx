@@ -1,24 +1,25 @@
 import React, {
     createContext,
-    useContext,
-    useState,
-    useEffect,
-    ReactNode,
     useCallback,
+    useContext,
+    useEffect,
     useMemo,
+    useState,
+    ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
     getUser,
     login as apiLogin,
     register as apiRegister,
     logout as apiLogout,
     claimProject,
-} from "../api"; // Sadece API fonksiyonları buradan
-import { ensureCsrf } from "../lib/http"; // ensureCsrf doğru yerden import edildi
-import { GUEST_PROJECT_ID_KEY } from "../constants";
+} from "@/api";
+import { ensureCsrf } from "@/lib/http";
+import { GUEST_PROJECT_ID_KEY } from "@/constants";
+import { routeUrls } from "@/routes";
 
-// --- Tip Tanımlamaları ---
 interface User {
     id: number;
     name: string;
@@ -46,10 +47,8 @@ interface AuthContextType {
     logout: () => Promise<void>;
 }
 
-// --- Context Oluşturma ---
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// --- Provider Bileşeni ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -100,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 await claimProject(guestProjectId);
                 localStorage.removeItem(GUEST_PROJECT_ID_KEY);
-                navigate(`/blueprint/${guestProjectId}`, {
+                navigate(routeUrls.blueprint(guestProjectId), {
                     state: { claimed: true },
                 });
                 return;
@@ -109,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.removeItem(GUEST_PROJECT_ID_KEY);
             }
         }
-        navigate("/");
+        navigate(routeUrls.home);
     }, [navigate]);
 
     const register = useCallback(
@@ -137,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Logout request failed:", error);
         } finally {
             setUser(null);
-            navigate("/");
+            navigate(routeUrls.home);
         }
     }, [navigate]);
 
@@ -159,7 +158,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-// --- Hook ---
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {

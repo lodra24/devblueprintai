@@ -6,9 +6,11 @@ use App\Enums\ProjectStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Resources\ProjectResource;
+use App\Http\Resources\ProjectSummaryResource;
 use App\Jobs\GenerateBlueprintJob;
 use App\Models\Project;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
@@ -50,5 +52,22 @@ class ProjectController extends Controller
         $project->load('epics.userStories');
 
         return new ProjectResource($project);
+    }
+
+    /**
+     * Display a listing of the user's projects.
+     */
+    public function myProjects(Request $request)
+    {
+        $perPage = max(1, min(50, (int) $request->integer('per_page', 10)));
+        $page = max(1, (int) $request->integer('page', 1));
+
+        $projects = $request->user()
+            ->projects()
+            ->select(['id', 'name', 'status', 'progress', 'created_at', 'updated_at'])
+            ->latest('updated_at')
+            ->paginate(perPage: $perPage, page: $page);
+
+        return ProjectSummaryResource::collection($projects);
     }
 }

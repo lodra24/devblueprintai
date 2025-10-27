@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom"; // useNavigate kaldırıldı çünkü artık AuthContext içinde
-import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
-function LoginPage() {
+import { useAuth } from "@/contexts/AuthContext";
+import { routeUrls } from "@/routes";
+
+const LoginPage: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -17,10 +19,9 @@ function LoginPage() {
 
         try {
             await login({ email, password });
-            // Yönlendirme artık AuthContext tarafından yönetiliyor.
         } catch (err: any) {
             console.error("Login failed:", err);
-            if (err.response && err.response.data && err.response.data.errors) {
+            if (err.response?.data?.errors) {
                 const errorMessages = Object.values(
                     err.response.data.errors
                 ).flat();
@@ -28,9 +29,8 @@ function LoginPage() {
             } else {
                 setError(err.response?.data?.message || "Invalid credentials.");
             }
-            setIsLoading(false); // Sadece hata durumunda isLoading'i burada false yap
+            setIsLoading(false);
         }
-        // Başarılı durumda isLoading'i false yapmaya gerek yok, çünkü sayfa değişecek.
     };
 
     return (
@@ -43,7 +43,7 @@ function LoginPage() {
                     <p className="mt-2 text-center text-sm text-gray-400">
                         Or{" "}
                         <Link
-                            to="/register"
+                            to={routeUrls.register}
                             className="font-medium text-sky-500 hover:text-sky-400"
                         >
                             create an account
@@ -67,7 +67,7 @@ function LoginPage() {
                                 autoComplete="email"
                                 required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(event) => setEmail(event.target.value)}
                                 className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
                                 disabled={isLoading}
                             />
@@ -89,7 +89,7 @@ function LoginPage() {
                                 autoComplete="current-password"
                                 required
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(event) => setPassword(event.target.value)}
                                 className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
                                 disabled={isLoading}
                             />
@@ -115,6 +115,6 @@ function LoginPage() {
             </div>
         </div>
     );
-}
+};
 
 export default LoginPage;

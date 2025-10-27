@@ -1,6 +1,6 @@
 import { http, ensureCsrf } from "./lib/http";
 import { AxiosError } from "axios";
-import { Project } from "./types";
+import { Paginated, Project, ProjectSummary } from "./types";
 
 type ResourceResponse<T> = {
     data: T;
@@ -23,13 +23,33 @@ export const createProject = async (data: {
     return response.data;
 };
 
-export const getProject = async (
-    projectId: string
-): Promise<Project> => {
-    const response =
-        await http.get<ResourceResponse<Project>>(`/projects/${projectId}`);
+export const getProject = async (projectId: string): Promise<Project> => {
+    const response = await http.get<ResourceResponse<Project>>(
+        `/projects/${projectId}`
+    );
 
     return unwrapResource(response.data);
+};
+
+type GetMyProjectsOptions = {
+    page?: number;
+    perPage?: number;
+};
+
+export const getMyProjects = async (
+    options: GetMyProjectsOptions = {}
+): Promise<Paginated<ProjectSummary[]>> => {
+    const { page = 1, perPage = 10 } = options;
+    const response = await http.get<Paginated<ProjectSummary[]>>(
+        "/my-projects",
+        {
+            params: {
+                page,
+                per_page: perPage,
+            },
+        }
+    );
+    return response.data;
 };
 
 export const claimProject = async (projectId: string) => {

@@ -95,7 +95,19 @@ const resolveReorderIntent = (
         const hoverIndex = reorderedIds.indexOf(hoveredStoryId);
 
         if (hoverIndex !== -1) {
+            const activeSortableIndex =
+                event.active.data.current?.sortable?.index;
+            const overSortableIndex = sortableData.index;
+
             insertionIndex = hoverIndex;
+
+            if (
+                typeof activeSortableIndex === "number" &&
+                typeof overSortableIndex === "number" &&
+                overSortableIndex > activeSortableIndex
+            ) {
+                insertionIndex = hoverIndex + 1;
+            }
         }
     }
 

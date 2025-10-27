@@ -1,5 +1,3 @@
-import React from "react";
-
 const CardSkeleton = () => (
     <div className="p-4 bg-gray-800 rounded-lg shadow animate-pulse">
         <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
@@ -24,3 +22,20 @@ export const BoardSkeleton = () => {
         </div>
     );
 };
+
+export const ProjectListSkeleton = () => (
+    <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+            <div
+                key={index}
+                className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg bg-gray-800/60 p-4 shadow animate-pulse"
+            >
+                <div className="w-full sm:w-auto flex-1 space-y-3">
+                    <div className="h-5 w-32 bg-gray-700 rounded" />
+                    <div className="h-4 w-40 bg-gray-700 rounded" />
+                </div>
+                <div className="h-9 w-32 bg-gray-700/80 rounded" />
+            </div>
+        ))}
+    </div>
+);

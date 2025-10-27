@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys as qk } from "@/lib/queryKeys";
+import { qk } from "@/lib/queryKeys";
 import { Project, Epic, UserStory } from "@/types";
 import { http, ensureCsrf } from "@/lib/http";
 import { produce } from "immer";
@@ -37,7 +37,7 @@ const deleteEpic = async (epicId: string): Promise<void> => {
 
 export const useCreateEpic = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: createEpic,
@@ -84,7 +84,7 @@ export const useCreateEpic = (projectId: string) => {
 
 export const useUpdateEpic = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: updateEpic,
@@ -127,7 +127,7 @@ export const useUpdateEpic = (projectId: string) => {
 
 export const useDeleteEpic = (projectId: string) => {
     const queryClient = useQueryClient();
-    const projectQueryKey = qk.projects.detail(projectId);
+    const projectQueryKey = qk.project(projectId);
 
     return useMutation({
         mutationFn: deleteEpic,
