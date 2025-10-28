@@ -1,3 +1,5 @@
+// Dosya: resources/js/hooks/useProject.ts
+
 import {
     useQuery,
     UseQueryResult,
@@ -6,14 +8,7 @@ import {
 import { AxiosError } from "axios";
 import { getProject } from "@/api";
 import { qk } from "@/lib/queryKeys";
-import { Project, ProjectStatus } from "@/types";
-
-const POLLING_INTERVAL_MS = 5000;
-
-const shouldPollStatus = (status?: ProjectStatus): boolean => {
-    if (!status) return false;
-    return ["generating", "parsing"].includes(status);
-};
+import { Project } from "@/types";
 
 export const useProject = (
     projectId?: string
@@ -27,14 +22,6 @@ export const useProject = (
             return getProject(projectId);
         },
         enabled: !!projectId,
-        refetchInterval: (query) => {
-            const project = query.state.data;
-            return project && shouldPollStatus(project.status)
-                ? POLLING_INTERVAL_MS
-                : false;
-        },
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
         placeholderData: keepPreviousData,
     });
 };

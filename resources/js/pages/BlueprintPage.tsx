@@ -6,6 +6,7 @@ import { GUEST_PROJECT_ID_KEY } from "@/constants";
 import { useBlueprintData } from "@/hooks/useBlueprintData";
 import { BoardSkeleton } from "@/components/Skeletons"; // Import BoardSkeleton
 import Board from "@/components/Board"; // Import Board
+import BlueprintStatusBar from "@/components/BlueprintStatusBar";
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
@@ -83,8 +84,16 @@ function BlueprintPage() {
                 <p className="mt-2 text-md text-gray-400 italic">
                     Idea: "{project?.idea_text ?? "No idea provided yet."}"
                 </p>
+                {project ? (
+                    <BlueprintStatusBar
+                        status={project.status}
+                        progress={project.progress}
+                        stage={project.stage}
+                        message={project.message}
+                    />
+                ) : null}
                 {/* Board component will be rendered here */}
-                <Board project={project} />
+                {project ? <Board project={project} /> : null}
             </>
         );
     };

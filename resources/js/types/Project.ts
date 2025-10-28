@@ -13,6 +13,8 @@ export interface Project {
     idea_text: string | null;
     status: ProjectStatus;
     progress: number;
+    stage?: string | null;
+    message?: string | null;
     epics: Epic[];
     created_at: string;
     updated_at: string;

@@ -57,7 +57,7 @@ class GenerateBlueprintJob implements ShouldQueue
             BlueprintGenerated::dispatch($project->fresh(), $promptHash);
             Log::info("Blueprint generation fully completed for project ID: {$this->projectId}");
         } catch (Throwable $e) {
-            $this->updateProject($project, ProjectStatus::Failed, 0, 'failed', $e->getMessage());
+            $this->updateProject($project, ProjectStatus::Failed, $project->progress ?? 0, 'failed', $e->getMessage());
             Log::error("Blueprint generation failed for project ID: {$this->projectId}. Error: {$e->getMessage()}");
 
             throw $e;
@@ -76,6 +76,12 @@ class GenerateBlueprintJob implements ShouldQueue
             'progress' => $progress,
         ])->save();
 
-        BlueprintStatusUpdated::dispatch($project->fresh(), $status, $progress, $stage, $message);
+        BlueprintStatusUpdated::dispatch(
+            $project->getKey(),
+            $status,
+            $progress,
+            $stage,
+            $message
+        );
     }
 }
