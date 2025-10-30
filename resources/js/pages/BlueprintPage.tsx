@@ -7,6 +7,7 @@ import { useBlueprintData } from "@/hooks/useBlueprintData";
 import { BoardSkeleton } from "@/components/Skeletons"; // Import BoardSkeleton
 import Board from "@/components/Board"; // Import Board
 import BlueprintStatusBar from "@/components/BlueprintStatusBar";
+import SchemaPanel from "@/components/SchemaPanel";
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
@@ -94,6 +95,12 @@ function BlueprintPage() {
                 ) : null}
                 {/* Board component will be rendered here */}
                 {project ? <Board project={project} /> : null}
+                {project ? (
+                    <SchemaPanel
+                        schemas={project.schema_suggestions ?? []}
+                        telemetry={project.telemetry}
+                    />
+                ) : null}
             </>
         );
     };

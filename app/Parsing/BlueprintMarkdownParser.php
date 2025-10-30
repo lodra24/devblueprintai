@@ -81,7 +81,7 @@ class BlueprintMarkdownParser
             fn (array $story) => trim($story['content']) !== ''
         ));
 
-        if ($epic['title'] !== '' || !empty($epic['stories'])) {
+        if (!empty($epic['stories'])) {
             $data['epics'][] = $epic;
         }
 
@@ -95,13 +95,20 @@ class BlueprintMarkdownParser
 
     private function isSchemaHeading(string $line): bool
     {
-        return (bool) preg_match('/^#{2,}\s*(?:database\s+)?schema (?:suggestions?|design)/i', $line);
+        $stripped = preg_replace('/[*_`]+/', '', $line);
+
+        return (bool) preg_match(
+            '/^#{2,}\s*(?:database|data\s*model|schema)\s*(?:schema)?\s*(?:suggestions?|design|model)?/i',
+            $stripped ?? $line
+        );
     }
 
     private function extractEpicTitle(string $line): string
     {
         $title = preg_replace('/^#{2,}\s*/', '', $line);
         $title = preg_replace('/^epic\b[:\-]?\s*/i', '', $title);
+
+        $title = preg_replace('/[*_`~]+/', '', $title ?? '');
 
         return trim((string) $title);
     }
@@ -111,17 +118,17 @@ class BlueprintMarkdownParser
      */
     private function parseStoryLine(string $line): ?array
     {
-        if (!preg_match('/^(\-|\*|\d+\.)\s*(.+)$/', $line, $matches)) {
+        if (!preg_match('/^(?:[-*\x{2022}\x{2013}\x{2014}]|\d+[.)])\s*(.+)$/u', $line, $matches)) {
             return null;
         }
 
-        $content = trim($matches[2]);
+        $content = trim($matches[1]);
 
         // Remove optional leading label
         $content = preg_replace('/^(user\s+story|story)\s*[:\-]\s*/i', '', $content);
 
         // Remove any leftover bullet markers from nested lists (e.g. "- * Story")
-        $content = preg_replace('/^(\*|\-|\d+\.)\s*/', '', $content);
+        $content = preg_replace('/^(?:[-*\x{2022}\x{2013}\x{2014}]|\d+[.)])\s*/u', '', $content);
 
         [$content, $meta] = $this->extractStoryMetadata($content);
 
@@ -224,7 +231,7 @@ class BlueprintMarkdownParser
     private function parseSchemaLine(string $line): ?array
     {
         // Remove list prefixes or code fences
-        $line = preg_replace('/^(\-|\*|\d+\.)\s*/', '', $line);
+        $line = preg_replace('/^(?:[-*\x{2022}\x{2013}\x{2014}]|\d+[.)])\s*/u', '', $line);
         $line = trim($line, '` ');
 
         if ($line === '') {
@@ -242,6 +249,18 @@ class BlueprintMarkdownParser
                 if (!empty($columns)) {
                     return [
                         'table_name' => strtolower($tableMatch[1]),
+                        'columns' => $columns,
+                    ];
+                }
+            }
+
+            // Attempt to parse formats like "users: id:int, name:varchar(255)"
+            if (preg_match('/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.+)$/', $line, $colonMatch)) {
+                $columns = $this->normaliseColumns($colonMatch[2]);
+
+                if (!empty($columns)) {
+                    return [
+                        'table_name' => strtolower($colonMatch[1]),
                         'columns' => $columns,
                     ];
                 }
@@ -266,7 +285,7 @@ class BlueprintMarkdownParser
         return array_values(array_filter(array_map(function ($column) {
             $column = trim($column, " `\t\n\r\0\x0B");
             $column = preg_replace('/\s+/', ' ', $column);
-            $column = preg_replace('/[^A-Za-z0-9_\s:]/', '', $column);
+            $column = preg_replace('/[^A-Za-z0-9_\s:(),]/', '', $column);
             return $column !== '' ? strtolower($column) : null;
         }, $columns)));
     }

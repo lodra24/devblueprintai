@@ -49,7 +49,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         // Eager-load nested relationships to prevent N+1 query issues.
-        $project->load('epics.userStories');
+        $project->load(['epics.userStories', 'schemaSuggestions']);
 
         return new ProjectResource($project);
     }

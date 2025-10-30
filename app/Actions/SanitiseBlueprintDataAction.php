@@ -13,9 +13,18 @@ class SanitiseBlueprintDataAction
      */
     public function __invoke(array $data): array
     {
+        $limits = config('blueprint.limits');
+        $maxEpics = (int) ($limits['epics'] ?? 50);
+        $maxStories = (int) ($limits['stories_per_epic'] ?? 200);
+        $maxSchemas = (int) ($limits['schemas'] ?? 50);
+        $maxColumns = (int) ($limits['columns_per_table'] ?? 100);
+        $maxTitle = (int) ($limits['title_max'] ?? 255);
+        $maxStory = (int) ($limits['story_max'] ?? 1000);
+        $maxColumnToken = (int) ($limits['column_token_max'] ?? 255);
+
         $clean = [
             'epics' => [],
-            'schema_suggestions' => $data['schema_suggestions'] ?? [],
+            'schema_suggestions' => [],
         ];
 
         $warnings = [
@@ -23,19 +32,37 @@ class SanitiseBlueprintDataAction
             'dedup_stories' => 0,
             'trimmed_epics' => 0,
             'trimmed_stories' => 0,
+            'dedup_schemas' => 0,
+            'trimmed_schemas' => 0,
+            'trimmed_schema_columns' => 0,
+            'trimmed_titles' => 0,
+            'trimmed_story_chars' => 0,
+            'trimmed_column_tokens' => 0,
+            'invalid_schema_tokens' => 0,
         ];
 
         $seenEpics = [];
+        $epics = is_array($data['epics'] ?? null) ? $data['epics'] : [];
 
-        foreach (($data['epics'] ?? []) as $epic) {
-            $title = trim((string)($epic['title'] ?? ''));
+        foreach ($epics as $epic) {
+            $title = $this->stripMarkdownFormatting(trim((string)($epic['title'] ?? '')));
+            $originalTitleLength = mb_strlen($title);
+            $title = $this->limitLen($title, $maxTitle);
+            if ($originalTitleLength > $maxTitle) {
+                $warnings['trimmed_titles']++;
+            }
             $stories = is_array($epic['stories'] ?? null) ? $epic['stories'] : [];
 
             $seenStories = [];
             $uniqueStories = [];
 
             foreach ($stories as $story) {
-                $content = trim((string)($story['content'] ?? ''));
+                $content = $this->stripMarkdownFormatting(trim((string)($story['content'] ?? '')));
+                $originalStoryLength = mb_strlen($content);
+                $content = $this->limitLen($content, $maxStory);
+                if ($originalStoryLength > $maxStory) {
+                    $warnings['trimmed_story_chars'] += $originalStoryLength - $maxStory;
+                }
 
                 if ($content === '') {
                     continue;
@@ -57,16 +84,16 @@ class SanitiseBlueprintDataAction
                 ], static fn ($value) => $value !== null && $value !== '');
             }
 
-            if (count($uniqueStories) > 200) {
-                $warnings['trimmed_stories'] += count($uniqueStories) - 200;
-                $uniqueStories = array_slice($uniqueStories, 0, 200);
+            if (count($uniqueStories) > $maxStories) {
+                $warnings['trimmed_stories'] += count($uniqueStories) - $maxStories;
+                $uniqueStories = array_slice($uniqueStories, 0, $maxStories);
             }
 
-            if ($title === '' && count($uniqueStories) === 0) {
+            if (count($uniqueStories) === 0) {
                 continue;
             }
 
-            if ($title === '' && count($uniqueStories) > 0) {
+            if ($title === '') {
                 $storyKeys = array_map(
                     fn ($storyItem) => BlueprintKeyFactory::story($storyItem['content']),
                     $uniqueStories
@@ -103,10 +130,10 @@ class SanitiseBlueprintDataAction
                     $existingStoryKeys[$uniqueStoryKey] = true;
                 }
 
-                if (count($existingStories) > 200) {
-                    $excess = count($existingStories) - 200;
+                if (count($existingStories) > $maxStories) {
+                    $excess = count($existingStories) - $maxStories;
                     $warnings['trimmed_stories'] += $excess;
-                    $existingStories = array_slice($existingStories, 0, 200);
+                    $existingStories = array_slice($existingStories, 0, $maxStories);
                     $clean['epics'][$index]['stories'] = $existingStories;
                 }
 
@@ -123,11 +150,111 @@ class SanitiseBlueprintDataAction
             ];
         }
 
-        if (count($clean['epics']) > 50) {
-            $warnings['trimmed_epics'] += count($clean['epics']) - 50;
-            $clean['epics'] = array_slice($clean['epics'], 0, 50);
+        if (count($clean['epics']) > $maxEpics) {
+            $warnings['trimmed_epics'] += count($clean['epics']) - $maxEpics;
+            $clean['epics'] = array_slice($clean['epics'], 0, $maxEpics);
         }
 
+        $schemaSuggestions = is_array($data['schema_suggestions'] ?? null) ? $data['schema_suggestions'] : [];
+        $seenSchemas = [];
+        $columnPattern = '/^[a-z_][a-z0-9_]*(?:[:\s]+[a-z_][a-z0-9_]*(?:\s*\(\s*[a-z0-9_,\s]*\s*\))?)*$/i';
+
+        foreach ($schemaSuggestions as $schema) {
+            $tableName = $this->stripMarkdownFormatting(trim((string)($schema['table_name'] ?? '')));
+            $tableName = strtolower($tableName);
+
+            if ($tableName === '') {
+                continue;
+            }
+
+            $columnsInput = is_array($schema['columns'] ?? null) ? $schema['columns'] : [];
+            $columnValues = [];
+            $seenColumns = [];
+
+            foreach ($columnsInput as $column) {
+                $columnText = $this->stripMarkdownFormatting(trim((string)$column));
+                $columnText = preg_replace('/\s+/', ' ', $columnText) ?? $columnText;
+                $columnText = preg_replace('/\s*:\s*/', ' ', $columnText) ?? $columnText;
+                $columnText = strtolower($columnText);
+                $originalColumnLength = mb_strlen($columnText);
+                $columnText = $this->limitLen($columnText, $maxColumnToken);
+                if ($originalColumnLength > $maxColumnToken) {
+                    $warnings['trimmed_column_tokens']++;
+                }
+
+                if (!preg_match($columnPattern, $columnText)) {
+                    $warnings['invalid_schema_tokens']++;
+                    continue;
+                }
+
+                if ($columnText === '') {
+                    continue;
+                }
+
+                if (isset($seenColumns[$columnText])) {
+                    continue;
+                }
+
+                $seenColumns[$columnText] = true;
+                $columnValues[] = $columnText;
+            }
+
+            if (empty($columnValues)) {
+                continue;
+            }
+
+            if (count($columnValues) > $maxColumns) {
+                $warnings['trimmed_schema_columns'] += count($columnValues) - $maxColumns;
+                $columnValues = array_slice($columnValues, 0, $maxColumns);
+            }
+
+            if (isset($seenSchemas[$tableName])) {
+                $warnings['dedup_schemas']++;
+                $index = $seenSchemas[$tableName];
+                $existingColumns = $clean['schema_suggestions'][$index]['columns'];
+                $mergedColumns = array_values(array_unique(array_merge($existingColumns, $columnValues)));
+
+                if (count($mergedColumns) > $maxColumns) {
+                    $warnings['trimmed_schema_columns'] += count($mergedColumns) - $maxColumns;
+                    $mergedColumns = array_slice($mergedColumns, 0, $maxColumns);
+                }
+
+                $clean['schema_suggestions'][$index]['columns'] = $mergedColumns;
+                continue;
+            }
+
+            $seenSchemas[$tableName] = count($clean['schema_suggestions']);
+            $clean['schema_suggestions'][] = [
+                'table_name' => $tableName,
+                'columns' => $columnValues,
+            ];
+        }
+
+        if (count($clean['schema_suggestions']) > $maxSchemas) {
+            $warnings['trimmed_schemas'] += count($clean['schema_suggestions']) - $maxSchemas;
+            $clean['schema_suggestions'] = array_slice($clean['schema_suggestions'], 0, $maxSchemas);
+        }
+
+        $clean['schema_suggestions'] = array_values($clean['schema_suggestions']);
+
         return ['data' => $clean, 'warnings' => $warnings];
+    }
+
+    private function stripMarkdownFormatting(string $value): string
+    {
+        $value = trim($value);
+        $value = preg_replace('/^[*_`~]+|[*_`~]+$/u', '', $value) ?? $value;
+        $value = preg_replace('/`([^`]+)`/u', '$1', $value) ?? $value;
+        $value = preg_replace('/\*\*(.+?)\*\*/u', '$1', $value) ?? $value;
+        $value = preg_replace('/__(.+?)__/u', '$1', $value) ?? $value;
+        $value = preg_replace('/~~(.+?)~~/u', '$1', $value) ?? $value;
+        $value = preg_replace('/\s{2,}/', ' ', $value) ?? $value;
+
+        return trim($value);
+    }
+
+    private function limitLen(string $value, int $max): string
+    {
+        return mb_strlen($value) > $max ? mb_substr($value, 0, $max) : $value;
     }
 }

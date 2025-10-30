@@ -60,7 +60,9 @@ class ValidateBlueprintDataActionTest extends TestCase
             'epics' => [
                 [
                     // 'title' key is missing
-                    'stories' => [],
+                    'stories' => [
+                        ['content' => 'Placeholder story'],
+                    ],
                 ],
             ],
         ];
@@ -94,8 +96,8 @@ class ValidateBlueprintDataActionTest extends TestCase
 
         ($this->action)([
             'epics' => [
-                ['title' => 'Duplicate', 'stories' => []],
-                ['title' => 'Duplicate', 'stories' => []],
+                ['title' => 'Duplicate', 'stories' => [['content' => 'Story A']]],
+                ['title' => 'Duplicate', 'stories' => [['content' => 'Story B']]],
             ],
             'schema_suggestions' => null,
         ]);
@@ -124,9 +126,11 @@ class ValidateBlueprintDataActionTest extends TestCase
         $this->assertEquals($validData, $validated);
     }
 
-    public function test_it_accepts_empty_stories_array(): void
+    public function test_it_requires_at_least_one_story_per_epic(): void
     {
-        $validData = [
+        $this->expectException(ValidationException::class);
+
+        ($this->action)([
             'epics' => [
                 [
                     'title' => 'Empty Epic',
@@ -134,6 +138,19 @@ class ValidateBlueprintDataActionTest extends TestCase
                 ],
             ],
             'schema_suggestions' => null,
+        ]);
+    }
+
+    public function test_it_accepts_decimal_precision_in_schema_columns(): void
+    {
+        $validData = [
+            'epics' => [],
+            'schema_suggestions' => [
+                [
+                    'table_name' => 'transactions',
+                    'columns' => ['amount decimal (10, 2)', 'tax decimal(5,2)'],
+                ],
+            ],
         ];
 
         $validated = ($this->action)($validData);

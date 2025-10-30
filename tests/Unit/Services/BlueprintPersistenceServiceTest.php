@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Actions\SanitiseBlueprintDataAction;
 use App\Actions\ValidateBlueprintDataAction;
 use App\Models\Project;
 use App\Parsing\BlueprintMarkdownParser;
@@ -10,6 +11,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class BlueprintPersistenceServiceTest extends TestCase
@@ -23,7 +25,8 @@ class BlueprintPersistenceServiceTest extends TestCase
         parent::setUp();
         $this->service = new BlueprintPersistenceService(
             new ValidateBlueprintDataAction(),
-            new BlueprintMarkdownParser()
+            new BlueprintMarkdownParser(),
+            new SanitiseBlueprintDataAction()
         );
     }
 
@@ -70,6 +73,24 @@ class BlueprintPersistenceServiceTest extends TestCase
             'project_id' => $project->id,
             'prompt_hash' => $promptHash,
         ]);
+
+        $schemaSuggestion = $project->fresh()->schemaSuggestions()->latest()->first();
+        $this->assertNotNull($schemaSuggestion);
+
+        $parsed = $schemaSuggestion->parsed;
+        $this->assertIsArray($parsed['schemas'] ?? null);
+        $this->assertArrayHasKey('telemetry', $parsed);
+        $this->assertSame('markdown_fallback', $parsed['telemetry']['parse_mode'] ?? null);
+        $this->assertFalse($parsed['telemetry']['schema_dropped'] ?? true);
+        $this->assertEquals(
+            0,
+            array_sum($parsed['telemetry']['warnings'] ?? [])
+        );
+        $this->assertSame('users', $parsed['schemas'][0]['table_name']);
+        $this->assertSame(
+            ['id', 'name', 'email', 'password_hash'],
+            $parsed['schemas'][0]['columns']
+        );
     }
 
     public function test_it_is_idempotent_for_same_prompt_hash(): void
@@ -128,7 +149,8 @@ class BlueprintPersistenceServiceTest extends TestCase
 
         $serviceWithMock = new BlueprintPersistenceService(
             $mockValidator,
-            new BlueprintMarkdownParser()
+            new BlueprintMarkdownParser(),
+            new SanitiseBlueprintDataAction()
         );
 
         try {
@@ -170,5 +192,121 @@ class BlueprintPersistenceServiceTest extends TestCase
         $this->assertSame(1, $project->fresh()->epics()->count()); // only manual epic remains
         $this->assertDatabaseCount('user_stories', 0);
         $this->assertDatabaseCount('schema_suggestions', 0);
+    }
+
+    public function test_it_records_empty_schema_with_telemetry_when_validation_drops_schema(): void
+    {
+        $project = Project::factory()->create();
+        $promptHash = sha1('prompt-schema-drop');
+
+        $validatorMock = $this->createMock(ValidateBlueprintDataAction::class);
+        $validatorMock
+            ->method('__invoke')
+            ->willReturnCallback(function (array $data) {
+                if (!empty($data['schema_suggestions'])) {
+                    throw ValidationException::withMessages([
+                        'schema_suggestions.0.columns.0' => ['Invalid column'],
+                    ]);
+                }
+
+                return $data;
+            });
+
+        $service = new BlueprintPersistenceService(
+            $validatorMock,
+            new BlueprintMarkdownParser(),
+            new SanitiseBlueprintDataAction()
+        );
+
+        $markdown = <<<MD
+        ## Epic: Sample
+        - Story: Valid Story
+
+        ### Database Schema Suggestions
+        users: id:int, invalid<> column
+        MD;
+
+        $service->persist($project, $markdown, $promptHash);
+
+        $schemaSuggestion = $project->fresh()->schemaSuggestions()->latest()->first();
+        $this->assertNotNull($schemaSuggestion);
+
+        $parsed = $schemaSuggestion->parsed;
+        $this->assertIsArray($parsed['schemas']);
+        $this->assertCount(0, $parsed['schemas']);
+        $this->assertTrue($parsed['telemetry']['schema_dropped']);
+        $this->assertSame(
+            'markdown_fallback',
+            $parsed['telemetry']['parse_mode']
+        );
+    }
+
+    public function test_it_merges_duplicate_schema_suggestions(): void
+    {
+        $project = Project::factory()->create();
+        $promptHash = sha1('prompt-merge-schemas');
+        $markdown = <<<MD
+        ## Epic: Product
+        - Story: Initial story
+
+        ### Database Schema Suggestions
+        users: id:int, name:varchar(255)
+        users: email varchar unique, created_at timestamp
+        MD;
+
+        $parser = new BlueprintMarkdownParser();
+        $parsedData = $parser->parse($markdown);
+        ['data' => $sanitisedData] = (new SanitiseBlueprintDataAction())($parsedData);
+        $this->assertNotEmpty($sanitisedData['schema_suggestions']);
+        $validatedData = (new ValidateBlueprintDataAction())($sanitisedData);
+        $this->assertNotEmpty($validatedData['schema_suggestions']);
+
+        $this->service->persist($project, $markdown, $promptHash);
+
+        $schemaSuggestion = $project->fresh()->schemaSuggestions()->latest()->first();
+        $this->assertNotNull($schemaSuggestion);
+
+        $parsed = $schemaSuggestion->parsed;
+        $schemas = array_values($parsed['schemas'] ?? []);
+        $this->assertCount(1, $schemas);
+        $this->assertEquals(
+            [
+                'id int',
+                'name varchar(255)',
+                'email varchar unique',
+                'created_at timestamp',
+            ],
+            $schemas[0]['columns']
+        );
+
+        $warnings = $parsed['telemetry']['warnings'] ?? [];
+        $this->assertGreaterThanOrEqual(1, $warnings['dedup_schemas'] ?? 0);
+        $this->assertSame(0, $warnings['trimmed_schema_columns'] ?? 0);
+    }
+
+    public function test_it_respects_schema_telemetry_feature_flag(): void
+    {
+        config()->set('blueprint.features.schema_telemetry', false);
+
+        $project = Project::factory()->create();
+        $promptHash = sha1('prompt-feature-flag');
+        $markdown = <<<MD
+        ## Epic: Flag Test
+        - Story: Sample story
+
+        ### Database Schema Suggestions
+        users: id int, email varchar
+        MD;
+
+        $this->service->persist($project, $markdown, $promptHash);
+
+        $schemaSuggestion = $project->fresh()->schemaSuggestions()->latest()->first();
+        $this->assertNotNull($schemaSuggestion);
+
+        $parsed = $schemaSuggestion->parsed;
+        $this->assertArrayHasKey('schemas', $parsed);
+        $this->assertArrayNotHasKey('telemetry', $parsed);
+
+        config()->set('blueprint.features.schema_telemetry', true);
     }
 }
