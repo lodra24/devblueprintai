@@ -90,7 +90,7 @@ class BlueprintMarkdownParser
 
     private function isEpicHeading(string $line): bool
     {
-        return (bool) preg_match('/^#{2,}\s*(?:epic\b[:\-]?\s*)?.*/i', $line);
+        return (bool) preg_match('/^#{2,}\s*(?:epic|campaign|pillar|theme|channel)\b[:\-]?\s*.*/i', $line);
     }
 
     private function isSchemaHeading(string $line): bool
@@ -98,7 +98,7 @@ class BlueprintMarkdownParser
         $stripped = preg_replace('/[*_`]+/', '', $line);
 
         return (bool) preg_match(
-            '/^#{2,}\s*(?:database|data\s*model|schema)\s*(?:schema)?\s*(?:suggestions?|design|model)?/i',
+            '/^#{2,}\s*(?:database|data\s*model|schema|measurement|kpi|analytics|tracking\s*plan)\s*(?:schema)?\s*(?:suggestions?|design|model|plan)?/i',
             $stripped ?? $line
         );
     }

@@ -190,7 +190,7 @@ class AiGenerationService
      */
     protected function buildPrompt(Project $project): string
     {
-        return "Project Name: {$project->name}\nProject Idea: {$project->idea_text}";
+        return "Brand/Offer: {$project->name}\nMarketing context: {$project->idea_text}";
     }
 
     /**

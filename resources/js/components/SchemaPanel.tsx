@@ -28,7 +28,7 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ schemas, telemetry }) => {
         <section className="mt-12">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-semibold text-sky-400">
-                    Database Schema Suggestions
+                    Measurement & KPI Plan
                 </h2>
             </div>
 

@@ -21,7 +21,7 @@ const Header: React.FC = () => {
                 <div className="flex lg:flex-1">
                     <Link to={routeUrls.home} className="-m-1.5 p-1.5">
                         <span className="text-xl font-bold text-sky-400">
-                            DevBlueprint AI
+                            MarketingBlueprint AI
                         </span>
                     </Link>
                 </div>

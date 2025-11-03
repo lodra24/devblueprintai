@@ -20,10 +20,10 @@ function HomePage() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 sm:p-6 md:p-8">
             <div className="text-center w-full max-w-2xl">
                 <h1 className="text-4xl sm:text-5xl font-bold text-sky-400">
-                    DevBluePrint AI
+                    MarketingBlueprint AI
                 </h1>
                 <p className="mt-4 text-lg sm:text-xl text-gray-300">
-                    Your Project Assistant from Idea to Action
+                    From Idea to Actionable Marketing Plan
                 </p>
 
                 <form
@@ -65,7 +65,7 @@ function HomePage() {
                             onChange={(e) => setIdeaText(e.target.value)}
                             required
                             className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                            placeholder="A platform where users can print and sell their own designs on t-shirts..."
+                            placeholder="Describe your product or service, target audience, and goals. e.g., 'A new D2C skincare brand for women aged 18-30, aiming to grow subscriptions in 90 days...'"
                             disabled={isLoading}
                         />
                     </div>
