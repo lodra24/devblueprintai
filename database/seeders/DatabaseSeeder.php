@@ -2,12 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Epic;
-use App\Models\Project;
 use App\Models\User;
-use App\Models\UserStory;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Eloquent\Factories\Sequence;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,31 +12,111 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::factory()->create([
+        $this->seedDemoProject();
+    }
+
+    private function seedDemoProject(): void
+    {
+        $user = User::firstOrCreate([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ], [
+            'password' => bcrypt('password'),
         ]);
 
-        Project::factory()
-            ->has(
-                Epic::factory()
-                    ->count(3)
-                    // Use a sequence to set the position in increments of 100
-                    ->state(new Sequence(
-                        fn (Sequence $sequence) => ['position' => ($sequence->index + 1) * 100],
-                    ))
-                    ->has(
-                        UserStory::factory()
-                            ->count(5)
-                            // Use a sequence for user story positions as well
-                            ->state(new Sequence(
-                                fn (Sequence $sequence) => ['position' => ($sequence->index + 1) * 100],
-                            ))
-                        , 'userStories')
-            )
-            ->for($user)
-            ->create([
-                'name' => 'My First Test Project',
-            ]);
+        $project = $user->projects()->firstOrCreate([
+            'name' => 'Marketing Launch Blueprint',
+            'idea_text' => 'AI destekli kampanya planı ve varlık üretimi.',
+            'status' => 'ready',
+            'progress' => 100,
+        ]);
+
+        $epics = [
+            [
+                'title' => 'Funnel Awareness Assets',
+                'position' => 100,
+                'stories' => [
+                    [
+                        'status' => 'in_progress',
+                        'priority' => 'high',
+                        'content' => 'VarID=FF-01 | Hook:"Bu, limiti aşmayan bir kancadır." | GoogleH1:"Kısa Başlık" | GoogleDesc:"Ürünün en güçlü faydasını tek cümlede anlatır." | CTA:"Şimdi Başla"',
+                    ],
+                    [
+                        'status' => 'todo',
+                        'priority' => 'medium',
+                        'content' => 'VarID=FF-02 | Hook:"Yeni kullanıcılar için benzersiz teklif." | GoogleH1:"Bu Google Başlığı 30 karakterden kesinlikle daha uzun olacak." | GoogleDesc:"Dönüşüm optimizasyonu için uzun açıklama." | CTA<=12:"Acil Katıl"',
+                    ],
+                    [
+                        'status' => 'done',
+                        'priority' => 'low',
+                        'content' => 'VarID=FF-03 | Hook:"Güvenilir referanslar ile ikna et." | GoogleH1:"Kanıt odaklı kısa başlık" | Proof:"Gerçek kullanıcı deneyimi ile destekle." | Objection:"Fiyat endişesine çözüm sun."',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Evaluation Stage Assets',
+                'position' => 200,
+                'stories' => [
+                    [
+                        'status' => 'todo',
+                        'priority' => 'high',
+                        'content' => 'VarID=EV-01 | Hook:"Değer önerisini ilk saniyede ver." | MetaPrimary:"Sosyal kanıt ile dönüşümü hızlandır." | EmailSubject:"Bu fırsatı kaçırma!" | CTA:"Hemen İncele"',
+                    ],
+                    [
+                        'status' => 'in_progress',
+                        'priority' => 'medium',
+                        'content' => 'VarID=EV-02 | Hook:"Kısa vadede getiriyi anlat." | GoogleH1:"Verimliliği arttıran çözüm" | GoogleDesc:"Kullanıcıya yönelik ayrıntılı değer önerisi." | CTA<=8:"Deneme"',
+                    ],
+                    [
+                        'status' => 'todo',
+                        'priority' => 'medium',
+                        'content' => 'VarID=EV-03 | Hook:"Sık sorulan sorulara cevap ver." | Proof:"Uzun süreli müşteri memnuniyetini anlat." | Objection:"Uygulama süresinin kısa olduğunu belirt."',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Conversion Catalyst Assets',
+                'position' => 300,
+                'stories' => [
+                    [
+                        'status' => 'todo',
+                        'priority' => 'high',
+                        'content' => 'VarID=CV-01 | Hook:"Sınırlı sayıda kontenjan vurgusu." | GoogleH1:"Bugün kaydol ve kazanmaya başla" | GoogleDesc:"Sadece bu hafta geçerli olan özel teklif." | CTA:"Teklifimi Al"',
+                    ],
+                    [
+                        'status' => 'in_progress',
+                        'priority' => 'high',
+                        'content' => 'VarID=CV-02 | Hook:"Zaman tasarrufu sağlayan çözüm." | LP_H1:"Operasyon maliyetini %35 düşüren platform" | GoogleDesc:"SaaS çözümü ile ekip verimliliğini artır." | CTA<=6:"Başla"',
+                    ],
+                    [
+                        'status' => 'todo',
+                        'priority' => 'low',
+                        'content' => 'VarID=CV-03 | Hook:"Gelişmiş raporlama ile karar ver." | GoogleH1:"Veriye dayalı kararları güçlendir" | GoogleDesc:"Analitik paneller ile anlık içgörü kazan." | CTA:"Demo Talep Et"',
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($epics as $storyIndexOffset => $epicData) {
+            $epic = $project->epics()->updateOrCreate(
+                ['title' => $epicData['title']],
+                [
+                    'position' => $epicData['position'],
+                    'is_ai_generated' => true,
+                ]
+            );
+
+            foreach ($epicData['stories'] as $storyIndex => $storyData) {
+                $epic->userStories()->updateOrCreate(
+                    ['content' => $storyData['content']],
+                    [
+                        'status' => $storyData['status'],
+                        'priority' => $storyData['priority'],
+                        'position' => ($storyIndex + 1) * 100,
+                        'is_ai_generated' => true,
+                    ]
+                );
+            }
+        }
     }
 }

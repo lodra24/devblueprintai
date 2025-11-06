@@ -9,6 +9,12 @@ export type ProjectStatus =
     | "ready"
     | "failed";
 
+export interface ProjectMetrics {
+    assets_total: number;
+    high_priority_total: number;
+    over_limit_total: number;
+}
+
 export interface Project {
     id: string;
     name: string;
@@ -20,6 +26,7 @@ export interface Project {
     epics: Epic[];
     schema_suggestions: SchemaSuggestion[];
     telemetry: BlueprintTelemetry | null;
+    metrics?: ProjectMetrics | null;
     created_at: string;
     updated_at: string;
 }

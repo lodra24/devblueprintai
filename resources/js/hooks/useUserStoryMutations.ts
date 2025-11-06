@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/lib/queryKeys";
-import { Project, UserStory } from "@/types";
+import { Project, UserStory, Epic } from "@/types";
 import { http, ensureCsrf } from "@/lib/http";
 import { produce } from "immer";
 
@@ -49,6 +49,9 @@ const reorderUserStory = async (payload: ReorderPayload): Promise<void> => {
     await http.post("/user-stories/reorder", data);
 };
 
+const POSITION_STEP = 100;
+const POSITION_START = 100;
+
 // --- Helper Functions ---
 
 const findStoryAndEpic = (project: Project, storyId: string) => {
@@ -59,6 +62,14 @@ const findStoryAndEpic = (project: Project, storyId: string) => {
         }
     }
     return null;
+};
+
+const optimisticReindexEpic = (epic: Epic) => {
+    let position = POSITION_START;
+    epic.user_stories.forEach((story) => {
+        story.position = position;
+        position += POSITION_STEP;
+    });
 };
 
 // --- Mutation Hooks ---
@@ -222,29 +233,46 @@ export const useReorderUserStory = () => {
                 if (!movedStory) return;
 
                 movedStory.is_ai_generated = false;
+                (movedStory as UserStory & { epic_id?: string }).epic_id =
+                    payload.targetEpicId;
 
                 const targetEpic = draft.epics.find(
                     (e) => e.id === payload.targetEpicId
                 );
                 if (!targetEpic) return;
 
-                const afterStoryIndex = targetEpic.user_stories.findIndex(
-                    (s) => s.id === payload.afterStoryId
-                );
-                const beforeStoryIndex = targetEpic.user_stories.findIndex(
-                    (s) => s.id === payload.beforeStoryId
-                );
+                const afterStoryIndex = payload.afterStoryId
+                    ? targetEpic.user_stories.findIndex(
+                          (s) => s.id === payload.afterStoryId
+                      )
+                    : -1;
+                const beforeStoryIndex = payload.beforeStoryId
+                    ? targetEpic.user_stories.findIndex(
+                          (s) => s.id === payload.beforeStoryId
+                      )
+                    : -1;
 
                 let insertionIndex = 0;
-                if (payload.afterStoryId) {
+                if (payload.afterStoryId && afterStoryIndex !== -1) {
                     insertionIndex = afterStoryIndex + 1;
-                } else if (payload.beforeStoryId) {
+                } else if (
+                    payload.beforeStoryId &&
+                    beforeStoryIndex !== -1
+                ) {
                     insertionIndex = beforeStoryIndex;
                 } else {
-                    insertionIndex = 0; // Top of the list
+                    insertionIndex = 0;
                 }
 
                 targetEpic.user_stories.splice(insertionIndex, 0, movedStory);
+
+                // Hedef epikte deterministik reindex uygula
+                optimisticReindexEpic(targetEpic);
+
+                // Kaynak ve hedef farklıysa kaynak epik için de reindex uygula
+                if (sourceLocation.epic.id !== targetEpic.id) {
+                    optimisticReindexEpic(sourceLocation.epic);
+                }
             });
 
             queryClient.setQueryData(projectQueryKey, optimisticProject);

@@ -5,3 +5,5 @@ export * from "./ProjectSummary";
 export * from "./Pagination";
 export * from "./SchemaSuggestion";
 export * from "./BlueprintTelemetry";
+export * from "./DerivedFields";
+export * from "./BoardView";

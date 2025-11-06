@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AdAssetParser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -15,9 +16,38 @@ class ProjectResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $epics = collect();
-        if ($this->resource instanceof Model && $this->resource->relationLoaded('epics')) {
-            $epics = $this->resource->getRelation('epics');
+        $epicsLoaded = $this->resource instanceof Model && $this->resource->relationLoaded('epics');
+        $epics = $epicsLoaded ? $this->resource->getRelation('epics') : collect();
+
+        $metrics = null;
+        if ($epicsLoaded) {
+            $parser = app(AdAssetParser::class);
+            $total = 0;
+            $high = 0;
+            $over = 0;
+
+            foreach ($epics as $epic) {
+                if (!$epic->relationLoaded('userStories')) {
+                    continue;
+                }
+
+                foreach ($epic->userStories as $story) {
+                    $total++;
+
+                    if (($story->priority ?? null) === 'high') {
+                        $high++;
+                    }
+
+                    $derived = $parser->parse($story->content ?? '', $epic->title ?? null);
+                    $over += (int) ($derived['over_limit_count'] ?? 0);
+                }
+            }
+
+            $metrics = [
+                'assets_total' => $total,
+                'high_priority_total' => $high,
+                'over_limit_total' => $over,
+            ];
         }
 
         $schemaSuggestions = [];
@@ -60,6 +90,7 @@ class ProjectResource extends JsonResource
             'epics' => EpicResource::collection($epics),
             'schema_suggestions' => $schemaSuggestions,
             'telemetry' => $telemetry,
+            'metrics' => $metrics,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

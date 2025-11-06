@@ -1,12 +1,15 @@
 import React from "react";
-import { BlueprintTelemetry, SchemaSuggestion } from "@/types";
+import { Project } from "@/types";
 
 type SchemaPanelProps = {
-    schemas: SchemaSuggestion[];
-    telemetry?: BlueprintTelemetry | null;
+    project: Project;
 };
 
-const SchemaPanel: React.FC<SchemaPanelProps> = ({ schemas, telemetry }) => {
+const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
+    const schemas = project.schema_suggestions ?? [];
+    const telemetry = project.telemetry;
+    const metrics = project.metrics;
+
     const hasSchemas = schemas.length > 0;
     const warnings = telemetry?.warnings ?? {};
     const trimmedSchemas = warnings["trimmed_schemas"] ?? 0;
@@ -24,16 +27,55 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ schemas, telemetry }) => {
         trimmedColumnTokens > 0 ||
         invalidSchemaTokens > 0;
 
+    const metricItems =
+        metrics && typeof metrics === "object"
+            ? [
+                  {
+                      label: "Total Assets",
+                      value: metrics.assets_total ?? 0,
+                      accent: "bg-slate-800 text-slate-100 border-slate-600/60",
+                  },
+                  {
+                      label: "High Priority",
+                      value: metrics.high_priority_total ?? 0,
+                      accent: "bg-amber-500/15 text-amber-200 border-amber-400/40",
+                  },
+                  {
+                      label: "Over Limit",
+                      value: metrics.over_limit_total ?? 0,
+                      accent: "bg-rose-500/15 text-rose-200 border-rose-400/40",
+                  },
+              ]
+            : [];
+
     return (
         <section className="mt-12">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-sky-400">
-                    Measurement & KPI Plan
-                </h2>
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold text-sky-400">
+                        Measurement & KPI Plan
+                    </h2>
+                </div>
+
+                {metricItems.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        {metricItems.map(({ label, value, accent }) => (
+                            <div
+                                key={label}
+                                className={`rounded-xl border px-4 py-3 shadow-inner transition ${accent}`}
+                            >
+                                <p className="text-xs font-semibold uppercase tracking-wide text-white/60">
+                                    {label}
+                                </p>
+                                <p className="mt-2 text-2xl font-bold">{value}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : null}
             </div>
 
             {showNotice ? (
-                <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-200">
+                <div className="mt-6 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-200">
                     {schemaDropped ? (
                         <p>
                             Schema suggestions were omitted because the AI output did not

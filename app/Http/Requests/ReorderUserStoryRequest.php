@@ -27,7 +27,7 @@ class ReorderUserStoryRequest extends FormRequest
         }
 
         // The user can reorder if they can update the project.
-        return $this->user()->can('update', $story->epic->project);
+        return $this->user()?->can('update', $story->epic->project) ?? false;
     }
 
     /**

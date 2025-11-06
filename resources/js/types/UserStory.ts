@@ -1,3 +1,5 @@
+import type { DerivedFields } from "./DerivedFields";
+
 export interface UserStory {
     id: string;
     content: string;
@@ -7,4 +9,5 @@ export interface UserStory {
     is_ai_generated: boolean;
     created_at: string;
     updated_at: string;
+    derived_fields?: DerivedFields;
 }
