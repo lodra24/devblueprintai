@@ -18,3 +18,16 @@ export const AD_LIMITS = {
 } as const;
 
 export const GUEST_PROJECT_ID_KEY = "guestProjectId";
+
+export const theme = {
+    fonts: {
+        display: "'Sora','Inter','system-ui','sans-serif'",
+        body: "'Inter','system-ui','sans-serif'",
+    },
+    colors: {
+        ink: "#0F172A",
+        stone: "#78716C",
+        frost: "#F5F3F0",
+        accent: "#6366F1",
+    },
+};

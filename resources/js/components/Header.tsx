@@ -13,30 +13,30 @@ const Header: React.FC = () => {
     };
 
     return (
-        <header className="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-40">
+        <header className="sticky top-0 z-40 border-b border-stone/10 bg-frost/80 backdrop-blur-md">
             <nav
-                className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8"
+                className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between"
                 aria-label="Global"
             >
-                <div className="flex lg:flex-1">
-                    <Link to={routeUrls.home} className="-m-1.5 p-1.5">
-                        <span className="text-xl font-bold text-sky-400">
-                            MarketingBlueprint AI
-                        </span>
-                    </Link>
-                </div>
-                <div className="flex flex-1 justify-end items-center gap-x-6">
+                <Link to={routeUrls.home} className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent to-accent/60" />
+                    <span className="font-display text-lg font-bold tracking-tight text-ink">
+                        MarketingBlueprint <span className="font-normal text-stone">AI</span>
+                    </span>
+                </Link>
+                <div className="flex items-center gap-4">
                     {user ? (
                         <>
                             <Link
                                 to={routeUrls.dashboard}
-                                className="text-sm font-semibold leading-6 text-gray-300 hover:text-white"
+                                className="text-sm text-stone hover:text-ink transition-colors"
                             >
                                 My Projects
                             </Link>
                             <button
+                                type="button"
                                 onClick={handleLogout}
-                                className="rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                                className="px-3 py-1.5 rounded-lg bg-ink text-white text-sm hover:opacity-90 transition-opacity"
                             >
                                 Log out
                             </button>
@@ -45,13 +45,13 @@ const Header: React.FC = () => {
                         <>
                             <Link
                                 to={routeUrls.login}
-                                className="text-sm font-semibold leading-6 text-gray-300 hover:text-white"
+                                className="text-sm text-stone hover:text-ink transition-colors"
                             >
                                 Sign In
                             </Link>
                             <Link
                                 to={routeUrls.register}
-                                className="rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                                className="px-3 py-1.5 rounded-lg bg-ink text-white text-sm hover:opacity-90 transition-opacity"
                             >
                                 Create Account
                             </Link>

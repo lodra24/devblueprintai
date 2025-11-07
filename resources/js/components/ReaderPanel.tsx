@@ -185,9 +185,10 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                             className={`rounded-full px-2 py-0.5 ${
                                                 story.priority === "high"
                                                     ? "bg-rose-500/20 text-rose-200 border border-rose-400/50"
-                                                    : story.priority === "medium"
-                                                      ? "bg-amber-500/20 text-amber-200 border border-amber-400/50"
-                                                      : "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
+                                                    : story.priority ===
+                                                      "medium"
+                                                    ? "bg-amber-500/20 text-amber-200 border border-amber-400/50"
+                                                    : "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
                                             }`}
                                         >
                                             Priority: {story.priority}
@@ -196,9 +197,10 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                             className={`rounded-full px-2 py-0.5 ${
                                                 story.status === "done"
                                                     ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
-                                                    : story.status === "in_progress"
-                                                      ? "bg-sky-500/20 text-sky-200 border border-sky-400/50"
-                                                      : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
+                                                    : story.status ===
+                                                      "in_progress"
+                                                    ? "bg-sky-500/20 text-sky-200 border border-sky-400/50"
+                                                    : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
                                             }`}
                                         >
                                             Status: {story.status}
@@ -236,60 +238,83 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                             <div className="space-y-6">
                                 <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                                     <div className="space-y-4">
-                                        {PRIMARY_ASSET_FIELDS.map(({ key, label }) => (
-                                            <ReaderPanelField
-                                                key={key}
-                                                label={label}
-                                                value={derived.assets?.[key]}
-                                                limit={limits[key]}
-                                                count={charCounts[key]}
-                                                overLimit={overLimitSet.has(key)}
-                                                onCopy={() =>
-                                                    copyToClipboard(
-                                                        key,
-                                                        derived.assets?.[key] ?? undefined
-                                                    )
-                                                }
-                                                copied={copiedKey === key}
-                                            />
-                                        ))}
+                                        {PRIMARY_ASSET_FIELDS.map(
+                                            ({ key, label }) => (
+                                                <ReaderPanelField
+                                                    key={key}
+                                                    label={label}
+                                                    value={
+                                                        derived.assets?.[key]
+                                                    }
+                                                    limit={limits[key]}
+                                                    count={charCounts[key]}
+                                                    overLimit={overLimitSet.has(
+                                                        key
+                                                    )}
+                                                    onCopy={() =>
+                                                        copyToClipboard(
+                                                            key,
+                                                            derived.assets?.[
+                                                                key
+                                                            ] ?? undefined
+                                                        )
+                                                    }
+                                                    copied={copiedKey === key}
+                                                />
+                                            )
+                                        )}
                                     </div>
                                     <div className="space-y-4">
                                         <ReaderPanelField
                                             label={CTA_FIELD.label}
-                                            value={derived.assets?.[CTA_FIELD.key]}
+                                            value={
+                                                derived.assets?.[CTA_FIELD.key]
+                                            }
                                             limit={limits[CTA_FIELD.key]}
                                             count={charCounts[CTA_FIELD.key]}
-                                            overLimit={overLimitSet.has(CTA_FIELD.key)}
+                                            overLimit={overLimitSet.has(
+                                                CTA_FIELD.key
+                                            )}
                                             onCopy={() =>
                                                 copyToClipboard(
                                                     CTA_FIELD.key,
-                                                    derived.assets?.[CTA_FIELD.key] ??
-                                                        undefined
+                                                    derived.assets?.[
+                                                        CTA_FIELD.key
+                                                    ] ?? undefined
                                                 )
                                             }
                                             copied={copiedKey === CTA_FIELD.key}
                                             accent
                                         />
-                                        {REASONING_FIELDS.map(({ key, label }) => (
-                                            <ReaderPanelField
-                                                key={key}
-                                                label={label}
-                                                value={derived.reasoning?.[key]}
-                                                onCopy={() =>
-                                                    copyToClipboard(
-                                                        key,
-                                                        derived.reasoning?.[key] ?? undefined
-                                                    )
-                                                }
-                                                copied={copiedKey === key}
-                                            />
-                                        ))}
+                                        {REASONING_FIELDS.map(
+                                            ({ key, label }) => (
+                                                <ReaderPanelField
+                                                    key={key}
+                                                    label={label}
+                                                    value={
+                                                        derived.reasoning?.[key]
+                                                    }
+                                                    onCopy={() =>
+                                                        copyToClipboard(
+                                                            key,
+                                                            derived.reasoning?.[
+                                                                key
+                                                            ] ?? undefined
+                                                        )
+                                                    }
+                                                    copied={copiedKey === key}
+                                                />
+                                            )
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-3 border-t border-slate-800 pt-6">
                                     <ActionButton
-                                        label={copiedKey === "ALL" ? "Copied!" : "Copy All"}
+                                        label={
+                                            copiedKey === "ALL"
+                                                ? "Copied!"
+                                                : "Copy All"
+                                        }
                                         onClick={handleCopyAll}
                                         icon="copy"
                                     />
@@ -342,11 +367,7 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
 }) => {
     const hasContent = !!value;
     const effectiveCount =
-        typeof count === "number"
-            ? count
-            : value
-              ? value.length
-              : 0;
+        typeof count === "number" ? count : value ? value.length : 0;
 
     return (
         <div
@@ -354,8 +375,8 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
                 overLimit
                     ? "border-rose-500/60 bg-rose-500/10"
                     : accent
-                      ? "border-sky-500/40 bg-sky-500/10"
-                      : "border-slate-700/60 bg-slate-800/60"
+                    ? "border-sky-500/40 bg-sky-500/10"
+                    : "border-slate-700/60 bg-slate-800/60"
             }`}
         >
             <div className="flex items-start justify-between gap-3">
@@ -379,14 +400,20 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
                             {effectiveCount} chars
                         </span>
                     )}
-                    <CopyButton disabled={!hasContent} onClick={onCopy} copied={copied} />
+                    <CopyButton
+                        disabled={!hasContent}
+                        onClick={onCopy}
+                        copied={copied}
+                    />
                 </div>
             </div>
             <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-100">
                 {hasContent ? (
                     value
                 ) : (
-                    <span className="text-slate-500">No content available.</span>
+                    <span className="text-slate-500">
+                        No content available.
+                    </span>
                 )}
             </div>
         </div>
@@ -399,7 +426,11 @@ interface CopyButtonProps {
     disabled?: boolean;
 }
 
-const CopyButton: React.FC<CopyButtonProps> = ({ onClick, copied, disabled }) => (
+const CopyButton: React.FC<CopyButtonProps> = ({
+    onClick,
+    copied,
+    disabled,
+}) => (
     <button
         type="button"
         onClick={onClick}
@@ -408,8 +439,8 @@ const CopyButton: React.FC<CopyButtonProps> = ({ onClick, copied, disabled }) =>
             disabled
                 ? "cursor-not-allowed border-slate-700/60 bg-slate-800/50 text-slate-500"
                 : copied
-                  ? "border-emerald-500/70 bg-emerald-500/10 text-emerald-200"
-                  : "border-slate-700/60 bg-slate-800/80 text-slate-300 hover:bg-slate-800"
+                ? "border-emerald-500/70 bg-emerald-500/10 text-emerald-200"
+                : "border-slate-700/60 bg-slate-800/80 text-slate-300 hover:bg-slate-800"
         }`}
         aria-label="Copy field"
     >
@@ -467,7 +498,9 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     </button>
 );
 
-const ActionIcon: React.FC<{ name: ActionButtonProps["icon"] }> = ({ name }) => {
+const ActionIcon: React.FC<{ name: ActionButtonProps["icon"] }> = ({
+    name,
+}) => {
     switch (name) {
         case "copy":
             return (

@@ -1,99 +1,101 @@
 import React, { useState } from "react";
+import GlassCard from "@/components/ui/GlassCard";
+import InputFloat from "@/components/ui/InputFloat";
+import TextareaFloat from "@/components/ui/TextareaFloat";
+import ButtonEditorial from "@/components/ui/ButtonEditorial";
+import InfoCard from "@/components/ui/InfoCard";
 import { useCreateProject } from "@/hooks/useCreateProject";
 
-function HomePage() {
+export default function HomePage() {
     const [name, setName] = useState("");
-    const [idea_text, setIdeaText] = useState(""); // Changed from 'prompt' to 'idea_text'
-
+    const [ideaText, setIdeaText] = useState("");
     const createProjectMutation = useCreateProject();
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // Pass 'idea_text' to the mutation
-        createProjectMutation.mutate({ name, idea_text });
+        createProjectMutation.mutate({ name, idea_text: ideaText });
     };
 
     const isLoading = createProjectMutation.isPending;
-    const error = createProjectMutation.error;
+    const errorMessage =
+        (createProjectMutation.error as any)?.response?.data?.message ||
+        createProjectMutation.error?.message;
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 sm:p-6 md:p-8">
-            <div className="text-center w-full max-w-2xl">
-                <h1 className="text-4xl sm:text-5xl font-bold text-sky-400">
-                    MarketingBlueprint AI
+        <main className="relative z-10 font-body text-ink">
+            <div className="grain" />
+            <div className="fixed inset-0 bg-minimal pointer-events-none" />
+
+            <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
+                <h1 className="font-display text-5xl md:text-7xl leading-[1.1] tracking-tight font-bold">
+                    MarketingBlueprint <span className="text-accent">AI</span>
                 </h1>
-                <p className="mt-4 text-lg sm:text-xl text-gray-300">
+                <p className="mt-6 text-stone text-lg md:text-xl tracking-wide font-light">
                     From Idea to Actionable Marketing Plan
                 </p>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="mt-10 text-left space-y-6"
-                >
-                    <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-sm font-medium text-gray-300 mb-2"
-                        >
-                            Project Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                            placeholder="e.g., E-commerce Platform"
-                            disabled={isLoading}
-                        />
-                    </div>
+                <div className="relative mt-14 md:mt-16">
+                    <GlassCard className="max-w-2xl mx-auto p-6 sm:p-8">
+                        <form onSubmit={handleSubmit} className="space-y-6 text-left">
+                            <InputFloat
+                                id="project-name"
+                                label="Project Name"
+                                inputProps={{
+                                    type: "text",
+                                    name: "name",
+                                    value: name,
+                                    required: true,
+                                    disabled: isLoading,
+                                    onChange: (event) => setName(event.target.value),
+                                    placeholder: " ",
+                                    autoComplete: "off",
+                                }}
+                            />
 
-                    <div>
-                        <label
-                            htmlFor="idea_text" // Changed from 'prompt'
-                            className="block text-sm font-medium text-gray-300 mb-2"
-                        >
-                            Your Project Idea (in one sentence)
-                        </label>
-                        <textarea
-                            id="idea_text" // Changed from 'prompt'
-                            name="idea_text" // Changed from 'prompt'
-                            rows={4}
-                            value={idea_text}
-                            onChange={(e) => setIdeaText(e.target.value)}
-                            required
-                            className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                            placeholder="Describe your product or service, target audience, and goals. e.g., 'A new D2C skincare brand for women aged 18-30, aiming to grow subscriptions in 90 days...'"
-                            disabled={isLoading}
-                        />
-                    </div>
+                            <div className="divider" />
 
-                    {error && (
-                        <div className="rounded-md bg-red-500/20 p-4">
-                            <p className="text-sm text-red-400">
-                                {(error as any).response?.data?.message ||
-                                    "An unexpected error occurred."}
+                            <TextareaFloat
+                                id="project-idea"
+                                label="Your Project Idea"
+                                rows={4}
+                                textareaProps={{
+                                    name: "idea_text",
+                                    value: ideaText,
+                                    required: true,
+                                    disabled: isLoading,
+                                    onChange: (event) => setIdeaText(event.target.value),
+                                    placeholder: " ",
+                                }}
+                            />
+
+                            {errorMessage && (
+                                <p className="text-sm text-red-600 text-center" role="alert">
+                                    {errorMessage}
+                                </p>
+                            )}
+
+                            <ButtonEditorial
+                                type="submit"
+                                className="mt-6 disabled:opacity-60 disabled:pointer-events-none"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Generating..." : "Generate Blueprint"}
+                            </ButtonEditorial>
+
+                            <p className="hint-text">
+                                e.g. "A new D2C skincare brand for women aged 18-30, aiming to grow
+                                subscriptions in 90 days..."
                             </p>
-                        </div>
-                    )}
+                        </form>
+                    </GlassCard>
+                </div>
 
-                    <div className="pt-4">
-                        <button
-                            type="submit"
-                            className="w-full rounded-md bg-sky-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isLoading}
-                        >
-                            {isLoading
-                                ? "Generating..."
-                                : "Generate Project Blueprint"}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <div className="mt-16 grid gap-3 sm:grid-cols-3 max-w-3xl mx-auto">
+                    <InfoCard titleTop="Focus" titleBottom="Persona x Channel Fit" />
+                    <InfoCard titleTop="Output" titleBottom="90-Day GTM Roadmap" />
+                    <InfoCard titleTop="Deliverables" titleBottom="Campaign Calendar & KPIs" />
+                </div>
+            </section>
+        </main>
     );
 }
-
-export default HomePage;
