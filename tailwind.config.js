@@ -55,6 +55,10 @@ export default {
                     "0%": { transform: "rotate(0deg) scale(1)" },
                     "100%": { transform: "rotate(90deg) scale(1.05)" },
                 },
+                authRise: {
+                    "0%": { opacity: "0", transform: "translateY(24px) scale(0.97)" },
+                    "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+                },
             },
             animation: {
                 glow: "glow 3s ease-in-out infinite",
@@ -63,6 +67,7 @@ export default {
                 pop: "pop 0.14s ease-out both",
                 menuIn: "menuIn 0.12s ease-out both",
                 rotateIn: "rotateIn 0.16s ease forwards",
+                authRise: "authRise 0.45s ease-out both",
             },
         },
     },

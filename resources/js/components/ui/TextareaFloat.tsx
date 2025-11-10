@@ -16,14 +16,16 @@ export default function TextareaFloat({
     className,
     textareaProps,
 }: Props) {
+    const { className: textareaClassName, ...restTextareaProps } = textareaProps ?? {};
+
     return (
         <div className={clsx("float-wrap", className)}>
             <textarea
                 id={id}
                 rows={rows}
                 placeholder=" "
-                className="input-clean resize-none"
-                {...textareaProps}
+                className={clsx("input-clean resize-none", textareaClassName)}
+                {...restTextareaProps}
             />
             <label htmlFor={id} className="float-label">
                 {label}

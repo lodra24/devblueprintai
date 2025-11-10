@@ -1,7 +1,13 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
+import AuthFormCard from "@/components/auth/AuthFormCard";
+import AuthToggle from "@/components/auth/AuthToggle";
+import ButtonEditorial from "@/components/ui/ButtonEditorial";
+import InputFloat from "@/components/ui/InputFloat";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAuthErrorMessage } from "@/lib/getAuthErrorMessage";
 import { routeUrls } from "@/routes";
 
 const RegisterPage: React.FC = () => {
@@ -9,173 +15,144 @@ const RegisterPage: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirmation, setPasswordConfirmation] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [clientError, setClientError] = useState<string | null>(null);
 
     const { register } = useAuth();
+    const registerMutation = useMutation({
+        mutationFn: register,
+    });
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setIsLoading(true);
-        setError(null);
+        setClientError(null);
+        registerMutation.reset();
 
         if (password !== passwordConfirmation) {
-            setError("Passwords do not match.");
-            setIsLoading(false);
+            setClientError("Passwords do not match.");
             return;
         }
 
         try {
-            await register({
+            await registerMutation.mutateAsync({
                 name,
                 email,
                 password,
                 password_confirmation: passwordConfirmation,
             });
-        } catch (err: any) {
-            console.error("Registration failed:", err);
-            if (err.response?.data?.errors) {
-                const errorMessages = Object.values(
-                    err.response.data.errors
-                ).flat();
-                setError(errorMessages.join(" "));
-            } else {
-                setError(
-                    err.response?.data?.message ||
-                        "An error occurred during registration."
-                );
-            }
-            setIsLoading(false);
+        } catch (mutationError) {
+            console.error("Registration failed:", mutationError);
         }
     };
 
+    const serverError = registerMutation.error
+        ? getAuthErrorMessage(
+              registerMutation.error,
+              "An error occurred during registration."
+          )
+        : null;
+    const errorMessage = clientError ?? serverError;
+
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white p-4">
-            <div className="w-full max-w-md space-y-8">
-                <div>
-                    <h1 className="text-center text-3xl font-bold tracking-tight text-sky-400">
-                        Create a new account
-                    </h1>
-                    <p className="mt-2 text-center text-sm text-gray-400">
-                        Already have an account?{" "}
-                        <Link
-                            to={routeUrls.login}
-                            className="font-medium text-sky-500 hover:text-sky-400"
-                        >
-                            Sign in
-                        </Link>
-                    </p>
-                </div>
+        <main className="relative min-h-screen bg-frost text-ink">
+            <div className="grain" />
+            <div className="fixed inset-0 bg-minimal" />
 
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-sm font-medium leading-6 text-gray-300"
-                        >
-                            Name
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                id="name"
-                                name="name"
-                                type="text"
-                                autoComplete="name"
-                                required
-                                value={name}
-                                onChange={(event) => setName(event.target.value)}
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
+            <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+                <AuthFormCard
+                    title="Create an account"
+                    subtitle="Launch with confidence—save briefs, channel plans, and KPIs inside one workspace."
+                    toggle={<AuthToggle active="register" />}
+                    footer={
+                        <p className="hint-text">
+                            Already onboard?{" "}
+                            <Link to={routeUrls.login} className="text-accent">
+                                Sign in
+                            </Link>
+                            .
+                        </p>
+                    }
+                >
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <InputFloat
+                            id="register-name"
+                            label="Full name"
+                            inputProps={{
+                                type: "text",
+                                name: "name",
+                                autoComplete: "name",
+                                required: true,
+                                value: name,
+                                onChange: (event) => setName(event.target.value),
+                                disabled: registerMutation.isPending,
+                            }}
+                        />
 
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-sm font-medium leading-6 text-gray-300"
-                        >
-                            Email address
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={email}
-                                onChange={(event) => setEmail(event.target.value)}
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
+                        <InputFloat
+                            id="register-email"
+                            label="Work email"
+                            inputProps={{
+                                type: "email",
+                                name: "email",
+                                autoComplete: "email",
+                                required: true,
+                                value: email,
+                                onChange: (event) => setEmail(event.target.value),
+                                disabled: registerMutation.isPending,
+                            }}
+                        />
 
-                    <div>
-                        <label
-                            htmlFor="password"
-                            className="block text-sm font-medium leading-6 text-gray-300"
-                        >
-                            Password
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                value={password}
-                                onChange={(event) => setPassword(event.target.value)}
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
+                        <InputFloat
+                            id="register-password"
+                            label="Password"
+                            inputProps={{
+                                type: "password",
+                                name: "password",
+                                autoComplete: "new-password",
+                                required: true,
+                                value: password,
+                                onChange: (event) => setPassword(event.target.value),
+                                disabled: registerMutation.isPending,
+                            }}
+                        />
 
-                    <div>
-                        <label
-                            htmlFor="password_confirmation"
-                            className="block text-sm font-medium leading-6 text-gray-300"
-                        >
-                            Confirm Password
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                id="password_confirmation"
-                                name="password_confirmation"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                value={passwordConfirmation}
-                                onChange={(event) =>
-                                    setPasswordConfirmation(event.target.value)
-                                }
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6"
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
+                        <InputFloat
+                            id="register-password-confirmation"
+                            label="Confirm password"
+                            inputProps={{
+                                type: "password",
+                                name: "password_confirmation",
+                                autoComplete: "new-password",
+                                required: true,
+                                value: passwordConfirmation,
+                                onChange: (event) =>
+                                    setPasswordConfirmation(event.target.value),
+                                disabled: registerMutation.isPending,
+                            }}
+                        />
 
-                    {error && (
-                        <div className="rounded-md bg-red-500/20 p-3">
-                            <p className="text-sm text-red-400">{error}</p>
-                        </div>
-                    )}
+                        {errorMessage && (
+                            <div
+                                className="rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-700"
+                                role="alert"
+                                aria-live="polite"
+                            >
+                                {errorMessage}
+                            </div>
+                        )}
 
-                    <div>
-                        <button
+                        <ButtonEditorial
                             type="submit"
-                            className="flex w-full justify-center rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50"
-                            disabled={isLoading}
+                            className="disabled:pointer-events-none disabled:opacity-60"
+                            disabled={registerMutation.isPending}
                         >
-                            {isLoading ? "Creating account..." : "Create account"}
-                        </button>
-                    </div>
-                </form>
+                            {registerMutation.isPending
+                                ? "Creating account..."
+                                : "Create account"}
+                        </ButtonEditorial>
+                    </form>
+                </AuthFormCard>
             </div>
-        </div>
+        </main>
     );
 };
 
