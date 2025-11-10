@@ -31,6 +31,23 @@ export const getProject = async (projectId: string): Promise<Project> => {
     return unwrapResource(response.data);
 };
 
+export const updateProjectName = async (
+    projectId: string,
+    data: { name: string }
+): Promise<Project> => {
+    await ensureCsrf();
+    const response = await http.patch<ResourceResponse<Project>>(
+        `/projects/${projectId}`,
+        data
+    );
+    return unwrapResource(response.data);
+};
+
+export const deleteProject = async (projectId: string): Promise<void> => {
+    await ensureCsrf();
+    await http.delete(`/projects/${projectId}`);
+};
+
 type GetMyProjectsOptions = {
     page?: number;
     perPage?: number;

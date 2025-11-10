@@ -28,6 +28,8 @@ Route::post('/projects/claim', [ClaimProjectController::class, '__invoke'])->mid
 
 // --- CRUD & Reorder Routes ---
 Route::middleware('auth:sanctum')->group(function () {
+    Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::apiResource('epics', EpicController::class)->only(['store', 'update', 'destroy']);
     Route::apiResource('user-stories', UserStoryController::class)->only(['store', 'update', 'destroy']);
     Route::post('/user-stories/reorder', ReorderUserStoryController::class)->name('user-stories.reorder');

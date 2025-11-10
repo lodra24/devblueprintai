@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ProjectStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Http\Resources\ProjectSummaryResource;
 use App\Jobs\GenerateBlueprintJob;
@@ -69,5 +70,29 @@ class ProjectController extends Controller
             ->paginate(perPage: $perPage, page: $page);
 
         return ProjectSummaryResource::collection($projects);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateProjectRequest $request, Project $project)
+    {
+        $this->authorize('update', $project);
+
+        $project->fill($request->validated());
+        $project->save();
+
+        return new ProjectResource($project->fresh());
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Project $project)
+    {
+        $this->authorize('delete', $project);
+        $project->delete();
+
+        return response()->noContent();
     }
 }

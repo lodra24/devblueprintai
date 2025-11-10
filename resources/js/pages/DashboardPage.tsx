@@ -9,13 +9,23 @@ import { ProjectListSkeleton } from "@/components/Skeletons";
 import { getProject } from "@/api";
 import { qk } from "@/lib/queryKeys";
 import { routeUrls } from "@/routes";
+import ProjectRow from "@/components/dashboard/ProjectRow";
+import { useRowMenu } from "@/hooks/useRowMenu";
 
+const updatedFormatter = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+});
 
 const DashboardPage: React.FC = () => {
     const { user } = useAuth();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
+
     const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState("");
+    const { openMenuId, toggleMenu, closeMenu } = useRowMenu();
 
     const {
         data: projectPage,
@@ -69,12 +79,22 @@ const DashboardPage: React.FC = () => {
         }
     }, [user, page]);
 
+    useEffect(() => {
+        if (!openMenuId) {
+            return;
+        }
+
+        if (!projectItems.some((project) => project.id === openMenuId)) {
+            closeMenu();
+        }
+    }, [openMenuId, projectItems, closeMenu]);
+
     const prefetchProject = useCallback(
         (projectId: string) => {
             void queryClient.prefetchQuery({
                 queryKey: qk.project(projectId),
                 queryFn: () => getProject(projectId),
-                staleTime: 10 * 60 * 1000, // 10 minutes
+                staleTime: 10 * 60 * 1000,
             });
         },
         [queryClient]
@@ -150,14 +170,36 @@ const DashboardPage: React.FC = () => {
         setPage((prev) => (prev < lastPage ? prev + 1 : prev));
     }, [lastPage]);
 
+    const filteredProjects = useMemo(() => {
+        if (!searchTerm.trim()) {
+            return projectItems;
+        }
+        const term = searchTerm.trim().toLowerCase();
+        return projectItems.filter((project) =>
+            project.name.toLowerCase().includes(term)
+        );
+    }, [projectItems, searchTerm]);
+
+    const paginationSummary = useMemo(() => {
+        if (searchTerm.trim()) {
+            return `Showing ${filteredProjects.length} of ${projectItems.length} results`;
+        }
+
+        if (!total) {
+            return "No projects to display";
+        }
+
+        return `Showing ${rangeStart}-${rangeEnd} of ${total} projects`;
+    }, [filteredProjects.length, projectItems.length, rangeStart, rangeEnd, total, searchTerm]);
+
     const renderContent = () => {
         if (!user) {
             return (
-                <div className="text-center text-gray-400">
+                <div className="text-center text-stone">
                     <p>You need to sign in to view your projects.</p>
                     <Link
                         to={routeUrls.login}
-                        className="mt-4 inline-block rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+                        className="mt-4 inline-flex justify-center open-btn bg-pastel-lilac"
                     >
                         Go to Login
                     </Link>
@@ -167,7 +209,11 @@ const DashboardPage: React.FC = () => {
 
         if (isLoading) {
             return (
-                <div role="status" aria-live="polite">
+                <div
+                    className="rounded-2xl bg-white/70 p-6 shadow-deep"
+                    role="status"
+                    aria-live="polite"
+                >
                     <span className="sr-only">Loading projects...</span>
                     <ProjectListSkeleton />
                 </div>
@@ -179,11 +225,11 @@ const DashboardPage: React.FC = () => {
 
             if (status === 401) {
                 return (
-                    <div className="text-center text-gray-400">
+                    <div className="text-center text-stone">
                         <p>You need to sign in to view your projects.</p>
                         <Link
                             to={routeUrls.login}
-                            className="mt-4 inline-block rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+                            className="mt-4 inline-flex justify-center open-btn bg-pastel-lilac"
                         >
                             Go to Login
                         </Link>
@@ -192,14 +238,12 @@ const DashboardPage: React.FC = () => {
             }
 
             return (
-                <div className="text-center text-red-400">
-                    <p>
-                        Error loading projects:{" "}
-                        {getErrorMessage()}
-                    </p>
+                <div className="text-center text-red-600">
+                    <p>Error loading projects: {getErrorMessage()}</p>
                     <button
+                        type="button"
                         onClick={() => refetch()}
-                        className="mt-4 rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+                        className="mt-4 inline-flex justify-center open-btn bg-pastel-rose text-ink border border-stone/20 hover:text-white hover:bg-accent hover:border-transparent"
                     >
                         Retry
                     </button>
@@ -209,11 +253,11 @@ const DashboardPage: React.FC = () => {
 
         if (!projectItems.length) {
             return (
-                <div className="text-center text-gray-400">
+                <div className="text-center text-stone">
                     <p>You don't have any saved projects yet.</p>
                     <Link
                         to={routeUrls.home}
-                        className="mt-4 inline-block rounded-md bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+                        className="mt-4 inline-flex justify-center open-btn bg-pastel-mint text-ink border border-stone/20 hover:text-white hover:bg-accent hover:border-transparent"
                     >
                         Create Your First Project
                     </Link>
@@ -221,81 +265,127 @@ const DashboardPage: React.FC = () => {
             );
         }
 
+        if (!filteredProjects.length) {
+            return (
+                <div className="text-center text-stone">
+                    <p>No projects match “{searchTerm}”. Try a different keyword.</p>
+                </div>
+            );
+        }
+
         return (
             <>
                 <ul className="space-y-4">
-                    {projectItems.map((project) => (
-                        <li
+                    {filteredProjects.map((project) => (
+                        <ProjectRow
                             key={project.id}
-                            className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg bg-gray-800 p-4 shadow"
-                        >
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                    {project.name}
-                                </h3>
-                                <p className="text-sm text-gray-400">
-                                    Last updated:{" "}
-                                    {new Date(
-                                        project.updated_at
-                                    ).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <Link
-                                to={routeUrls.blueprint(project.id)}
-                                onMouseEnter={() => prefetchProject(project.id)}
-                                className="flex-shrink-0 rounded-md bg-white/10 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
-                            >
-                                Open Blueprint
-                            </Link>
-                        </li>
+                            project={project}
+                            blueprintHref={routeUrls.blueprint(project.id)}
+                            lastUpdatedLabel={updatedFormatter.format(
+                                new Date(project.updated_at)
+                            )}
+                            isMenuOpen={openMenuId === project.id}
+                            onToggleMenu={() => toggleMenu(project.id)}
+                            onCloseMenu={closeMenu}
+                            onPrefetch={() => prefetchProject(project.id)}
+                        />
                     ))}
                 </ul>
-                <div className="mt-6 flex flex-col gap-4 text-sm text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-                    <span>
-                        Showing {rangeStart}-{rangeEnd} of {total} projects
-                    </span>
-                    <div className="flex items-center gap-3">
+
+                <div className="mt-8 flex flex-col gap-3 text-sm text-stone sm:flex-row sm:items-center sm:justify-between">
+                    <div>{paginationSummary}</div>
+                    <div className="flex items-center gap-2">
                         <button
                             type="button"
+                            className="open-btn bg-pastel-mint text-ink border border-stone/20 hover:text-white hover:bg-accent hover:border-transparent"
                             onClick={handlePreviousPage}
                             disabled={!canPrevious}
-                            className="rounded-md border border-white/10 px-3 py-2 font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Previous
                         </button>
-                        <span className="hidden text-center sm:inline">
+                        <span className="px-3 py-2 rounded-lg border border-stone/20 bg-white">
                             Page {currentPage} of {lastPage}
                         </span>
-                        {isFetching && !isLoading && (
-                            <span className="text-xs text-gray-400 sm:ml-2">
-                                Updating...
-                            </span>
-                        )}
                         <button
                             type="button"
+                            className="open-btn bg-pastel-lilac text-ink border border-stone/20 hover:text-white hover:bg-accent hover:border-transparent"
                             onClick={handleNextPage}
                             disabled={!canNext}
-                            className="rounded-md border border-white/10 px-3 py-2 font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Next
                         </button>
                     </div>
                 </div>
+                {isFetching && !isLoading && (
+                    <p className="mt-2 text-center text-xs text-stone/70">
+                        Updating…
+                    </p>
+                )}
             </>
         );
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
-            <div className="mx-auto max-w-4xl">
-                <div className="border-b border-white/10 pb-4 mb-8">
-                    <h1 className="text-3xl font-bold leading-tight tracking-tight text-white">
-                        My Projects
-                    </h1>
+        <main className="relative z-10 font-body text-ink">
+            <div className="grain" />
+            <div className="fixed inset-0 bg-minimal pointer-events-none" />
+
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16">
+                <div className="flex items-end justify-between gap-4">
+                    <div className="flex-1">
+                        <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
+                            My Projects
+                        </h1>
+                        <div className="mt-2 soft-sep" />
+                    </div>
+                    <div className="hidden sm:block w-[220px]">
+                        <Link
+                            to={routeUrls.home}
+                            className="btn-editorial inline-flex justify-center"
+                        >
+                            New Project
+                        </Link>
+                    </div>
                 </div>
-                {renderContent()}
-            </div>
-        </div>
+
+                <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                    <div className="relative flex-1">
+                        <input
+                            className="input-clean toolbar-input"
+                            placeholder="Search projects…"
+                            aria-label="Search projects"
+                            value={searchTerm}
+                            onChange={(event) => setSearchTerm(event.target.value)}
+                            disabled={!user || isLoading}
+                        />
+                        <svg
+                            className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M12.9 14.32a7 7 0 111.414-1.414l3.39 3.39a1 1 0 01-1.415 1.414l-3.39-3.39zM14 9a5 5 0 11-10 0 5 5 0 0110 0z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                    </div>
+                    <div className="sm:hidden">
+                        <Link
+                            to={routeUrls.home}
+                            className="btn-editorial inline-flex justify-center"
+                        >
+                            New Project
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="mt-6">{renderContent()}</div>
+            </section>
+        </main>
     );
 };
 

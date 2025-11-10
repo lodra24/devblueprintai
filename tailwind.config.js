@@ -16,6 +16,11 @@ export default {
                 stone: { DEFAULT: "#78716C" },
                 frost: { DEFAULT: "#F5F3F0" },
                 accent: { DEFAULT: "#6366F1" },
+                pastel: {
+                    lilac: "#EEF1FF",
+                    mint: "#EAF7F5",
+                    rose: "#FDECEF",
+                },
             },
             boxShadow: {
                 glass: "0 8px 24px rgba(15,23,42,.08), inset 0 1px 1px rgba(255,255,255,.2)",
@@ -38,11 +43,26 @@ export default {
                     "0%": { left: "-100%" },
                     "100%": { left: "100%" },
                 },
+                pop: {
+                    "0%": { opacity: "0", transform: "translateY(4px) scale(.98)" },
+                    "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+                },
+                menuIn: {
+                    "0%": { opacity: "0", transform: "scale(.96) translateY(2px)" },
+                    "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+                },
+                rotateIn: {
+                    "0%": { transform: "rotate(0deg) scale(1)" },
+                    "100%": { transform: "rotate(90deg) scale(1.05)" },
+                },
             },
             animation: {
                 glow: "glow 3s ease-in-out infinite",
                 fade: "fade 0.4s ease",
                 shimmer: "shimmer 2s infinite",
+                pop: "pop 0.14s ease-out both",
+                menuIn: "menuIn 0.12s ease-out both",
+                rotateIn: "rotateIn 0.16s ease forwards",
             },
         },
     },
