@@ -107,12 +107,6 @@ export default function ProjectRow({
             data-row
             data-editing={rowEditingAttr}
         >
-            <Link
-                to={blueprintHref}
-                className="row-link"
-                aria-label={`Open ${displayName}`}
-                onMouseEnter={onPrefetch}
-            />
             <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
                 <div className="flex-1 min-w-0">
                     <div className="title-wrap flex items-center gap-3">

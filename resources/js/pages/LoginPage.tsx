@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
             <div className="grain" />
             <div className="fixed inset-0 bg-minimal" />
 
-            <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+            <div className="relative z-10 flex min-h-screen items-start justify-center px-4 py-10 sm:items-center sm:px-8">
                 <AuthFormCard
                     title="Sign in"
                     subtitle="Pick up where you left off and continue refining your launch plan."

@@ -27,7 +27,7 @@ export default function HomePage() {
             <div className="fixed inset-0 bg-minimal pointer-events-none" />
 
             <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
-                <h1 className="font-display text-5xl md:text-7xl leading-[1.1] tracking-tight font-bold">
+                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight font-bold break-words">
                     MarketingBlueprint <span className="text-accent">AI</span>
                 </h1>
                 <p className="mt-6 text-stone text-lg md:text-xl tracking-wide font-light">
