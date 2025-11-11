@@ -122,7 +122,6 @@ class BlueprintPersistenceService
                     $story->fill([
                         'content' => $storyData['content'],
                         'priority' => $storyData['priority'] ?? ($story->priority ?? 'medium'),
-                        'status' => $storyData['status'] ?? ($story->status ?? 'todo'),
                         'position' => $storyPosition,
                         'is_ai_generated' => true,
                         'origin_prompt_hash' => $promptHash,

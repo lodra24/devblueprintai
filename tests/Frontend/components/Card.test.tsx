@@ -24,7 +24,6 @@ vi.mock("@dnd-kit/utilities", () => ({
 const buildStory = (overrides: Partial<UserStory> = {}): UserStory => ({
     id: "story-1",
     content: "Raw content",
-    status: "todo",
     priority: "high",
     position: 1,
     is_ai_generated: true,

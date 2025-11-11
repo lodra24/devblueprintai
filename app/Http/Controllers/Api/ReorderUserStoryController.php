@@ -38,7 +38,6 @@ class ReorderUserStoryController extends Controller
                     'epic_id' => (string) $s->epic_id,
                     'position' => (int) $s->position,
                     'content' => $s->content,
-                    'status' => $s->status,
                     'priority' => $s->priority,
                     'created_at' => $s->created_at,
                 ])
@@ -55,7 +54,6 @@ class ReorderUserStoryController extends Controller
                         'epic_id' => (string) $s->epic_id,
                         'position' => (int) $s->position,
                         'content' => $s->content,
-                        'status' => $s->status,
                         'priority' => $s->priority,
                         'created_at' => $s->created_at,
                     ])
@@ -85,7 +83,6 @@ class ReorderUserStoryController extends Controller
                 'epic_id' => $targetEpicId,
                 'position' => 0,
                 'content' => $story->content,
-                'status' => $story->status,
                 'priority' => $story->priority,
                 'created_at' => $story->created_at,
             ]]);
@@ -105,10 +102,9 @@ class ReorderUserStoryController extends Controller
                     'epic_id' => $targetEpicId,
                     'position' => $position,
                     'content' => $targetStory['content'],
-                    'status' => $targetStory['status'],
-                    'priority' => $targetStory['priority'],
-                    'created_at' => $targetStory['created_at'],
-                    'updated_at' => $timestamp,
+                'priority' => $targetStory['priority'],
+                'created_at' => $targetStory['created_at'],
+                'updated_at' => $timestamp,
                 ];
                 $position += self::POSITION_STEP;
             }
@@ -121,7 +117,6 @@ class ReorderUserStoryController extends Controller
                         'epic_id' => $sourceEpicId,
                         'position' => $position,
                         'content' => $sourceStory['content'],
-                        'status' => $sourceStory['status'],
                         'priority' => $sourceStory['priority'],
                         'created_at' => $sourceStory['created_at'],
                         'updated_at' => $timestamp,
@@ -134,7 +129,7 @@ class ReorderUserStoryController extends Controller
                 UserStory::query()->upsert(
                     $updates,
                     ['id'],
-                    ['epic_id', 'position', 'content', 'status', 'priority', 'updated_at']
+                    ['epic_id', 'position', 'content', 'priority', 'updated_at']
                 );
             }
         });

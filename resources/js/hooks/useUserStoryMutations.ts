@@ -21,7 +21,6 @@ const createUserStory = async (payload: {
 const updateUserStory = async (payload: {
     storyId: string;
     content?: string;
-    status?: UserStory["status"];
     priority?: UserStory["priority"];
 }): Promise<UserStory> => {
     await ensureCsrf();
@@ -95,7 +94,6 @@ export const useCreateUserStory = (projectId: string) => {
             const optimisticStory: UserStory = {
                 id: `optimistic-${Date.now()}`,
                 content: payload.content,
-                status: "todo",
                 priority: "medium",
                 position: (targetEpic.user_stories.at(-1)?.position ?? 0) + 100,
                 is_ai_generated: false,

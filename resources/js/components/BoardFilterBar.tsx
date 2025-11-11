@@ -21,13 +21,6 @@ const priorityOptions: Array<{ label: string; value: BoardFilters["priority"] }>
     { label: "Low", value: "low" },
 ];
 
-const statusOptions: Array<{ label: string; value: BoardFilters["status"] }> = [
-    { label: "All", value: "all" },
-    { label: "Todo", value: "todo" },
-    { label: "In Progress", value: "in_progress" },
-    { label: "Done", value: "done" },
-];
-
 const overLimitOptions: Array<{ label: string; value: BoardFilters["overLimit"] }> = [
     { label: "All", value: "all" },
     { label: "Yes", value: "over" },
@@ -68,14 +61,6 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                 label: `Priority: ${labelize(filters.priority)}`,
                 onRemove: () =>
                     onFiltersChange({ ...filters, priority: "all" }),
-            });
-        }
-
-        if (filters.status !== "all") {
-            chips.push({
-                label: `Status: ${labelize(filters.status)}`,
-                onRemove: () =>
-                    onFiltersChange({ ...filters, status: "all" }),
             });
         }
 
@@ -167,14 +152,6 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                         }
                     />
                     <Select
-                        label="Status"
-                        options={statusOptions}
-                        value={filters.status}
-                        onChange={(value) =>
-                            onFiltersChange({ ...filters, status: value })
-                        }
-                    />
-                    <Select
                         label="Over limit"
                         options={overLimitOptions}
                         value={filters.overLimit}
@@ -257,7 +234,6 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                         </button>
                     ))}
                     {(filters.priority !== "all" ||
-                        filters.status !== "all" ||
                         filters.overLimit !== "all" ||
                         filters.angles.length > 0 ||
                         searchTerm.trim() !== "") && (

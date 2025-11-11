@@ -226,8 +226,7 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
                                                     {varId}
                                                 </span>
                                                 <p className="text-xs text-slate-400">
-                                                    Priority: {story.priority} • Status:{" "}
-                                                    {story.status}
+                                                    Priority: {story.priority}
                                                     {over ? " • Over limit" : ""}
                                                 </p>
                                             </div>

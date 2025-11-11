@@ -56,7 +56,6 @@ class BlueprintPersistenceServiceTest extends TestCase
         $this->assertDatabaseHas('user_stories', [
             'content' => 'As a user, I want to register.',
             'priority' => 'high',
-            'status' => 'todo',
             'is_ai_generated' => true,
             'origin_prompt_hash' => $promptHash,
         ]);
@@ -64,7 +63,6 @@ class BlueprintPersistenceServiceTest extends TestCase
         $this->assertDatabaseHas('user_stories', [
             'content' => 'As a user, I want to log in.',
             'priority' => 'medium',
-            'status' => 'in_progress',
             'is_ai_generated' => true,
             'origin_prompt_hash' => $promptHash,
         ]);

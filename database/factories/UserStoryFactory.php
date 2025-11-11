@@ -20,7 +20,6 @@ class UserStoryFactory extends Factory
         return [
             'epic_id' => Epic::factory(),
             'content' => $this->faker->sentence(),
-            'status' => $this->faker->randomElement(['todo', 'in_progress', 'done']),
             'priority' => $this->faker->randomElement(['low', 'medium', 'high']),
             'position' => $this->faker->unique()->randomNumber(),
             'is_ai_generated' => false,

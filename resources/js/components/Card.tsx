@@ -31,23 +31,6 @@ const PRIORITY_STYLES: Record<UserStory["priority"], string> = {
     low: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/40",
 };
 
-const STATUS_LABELS: Record<UserStory["status"], string> = {
-    todo: "To Do",
-    in_progress: "In Progress",
-    done: "Done",
-};
-
-const statusColor = (status: UserStory["status"]) => {
-    switch (status) {
-        case "done":
-            return "text-emerald-300 bg-emerald-500/10 border border-emerald-400/40";
-        case "in_progress":
-            return "text-sky-300 bg-sky-500/10 border border-sky-400/40";
-        default:
-            return "text-slate-300 bg-slate-500/10 border border-slate-400/30";
-    }
-};
-
 const densityContainerClasses: Record<BoardDensity, string> = {
     compact: "gap-2 p-3",
     comfortable: "gap-3 p-4",
@@ -182,13 +165,6 @@ const Card: React.FC<CardProps> = ({
                         className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${PRIORITY_STYLES[story.priority]}`}
                     >
                         {story.priority}
-                    </span>
-                    <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${statusColor(
-                            story.status,
-                        )}`}
-                    >
-                        {STATUS_LABELS[story.status]}
                     </span>
                     {meta.angle_name && (
                         <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-200">

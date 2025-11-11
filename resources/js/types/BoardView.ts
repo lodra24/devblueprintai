@@ -9,7 +9,6 @@ export type BoardSortOption =
 
 export interface BoardFilters {
     priority: "all" | "high" | "medium" | "low";
-    status: "all" | "todo" | "in_progress" | "done";
     overLimit: "all" | "over" | "within";
     angles: string[];
 }

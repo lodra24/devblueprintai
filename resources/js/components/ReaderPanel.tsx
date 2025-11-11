@@ -193,18 +193,6 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                         >
                                             Priority: {story.priority}
                                         </span>
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 ${
-                                                story.status === "done"
-                                                    ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
-                                                    : story.status ===
-                                                      "in_progress"
-                                                    ? "bg-sky-500/20 text-sky-200 border border-sky-400/50"
-                                                    : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
-                                            }`}
-                                        >
-                                            Status: {story.status}
-                                        </span>
                                     </>
                                 )}
                             </div>

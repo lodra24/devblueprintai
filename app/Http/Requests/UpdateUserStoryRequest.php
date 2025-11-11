@@ -29,7 +29,6 @@ class UpdateUserStoryRequest extends FormRequest
     {
         return [
             'content' => ['sometimes', 'required', 'string', 'max:1000'],
-            'status' => ['sometimes', 'string', Rule::in(['todo', 'in_progress', 'done'])],
             'priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high'])],
         ];
     }

@@ -23,8 +23,8 @@ class ValidateBlueprintDataActionTest extends TestCase
                 [
                     'title' => 'User Authentication',
                     'stories' => [
-                        ['content' => 'As a user, I can register.', 'priority' => 'high', 'status' => 'todo'],
-                        ['content' => 'As a user, I can log in.', 'priority' => 'medium', 'status' => 'in_progress'],
+                        ['content' => 'As a user, I can register.', 'priority' => 'high'],
+                        ['content' => 'As a user, I can log in.', 'priority' => 'medium'],
                     ],
                 ],
             ],

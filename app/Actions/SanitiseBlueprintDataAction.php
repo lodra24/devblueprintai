@@ -80,7 +80,6 @@ class SanitiseBlueprintDataAction
                 $uniqueStories[] = array_filter([
                     'content' => $content,
                     'priority' => $story['priority'] ?? null,
-                    'status' => $story['status'] ?? null,
                 ], static fn ($value) => $value !== null && $value !== '');
             }
 

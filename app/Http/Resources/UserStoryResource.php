@@ -27,7 +27,6 @@ class UserStoryResource extends JsonResource
         return [
             'id' => $this->id,
             'content' => $this->content,
-            'status' => $this->status,
             'priority' => $this->priority,
             'position' => $this->position,
             'is_ai_generated' => $this->is_ai_generated,

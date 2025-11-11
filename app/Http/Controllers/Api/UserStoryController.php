@@ -28,7 +28,6 @@ class UserStoryController extends Controller
 
         $userStory = $epic->userStories()->create([
             'content' => $validated['content'],
-            'status' => 'todo',
             'priority' => 'medium',
             'position' => ($maxPosition ?? 0) + 100,
             'is_ai_generated' => false, // Mark as user-created

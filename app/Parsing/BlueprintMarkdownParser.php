@@ -9,7 +9,7 @@ class BlueprintMarkdownParser
     /**
      * Parse the AI generated markdown into structured blueprint data.
      *
-     * @return array{epics: array<int, array{title: string, stories: array<int, array{content: string, priority?: string|null, status?: string|null}>}>, schema_suggestions: array<int, array{table_name: string, columns: array<int, string>}>}
+     * @return array{epics: array<int, array{title: string, stories: array<int, array{content: string, priority?: string|null}>}>, schema_suggestions: array<int, array{table_name: string, columns: array<int, string>}>}
      */
     public function parse(string $markdown): array
     {
@@ -114,7 +114,7 @@ class BlueprintMarkdownParser
     }
 
     /**
-     * @return array{content: string, priority?: string|null, status?: string|null}|null
+     * @return array{content: string, priority?: string|null}|null
      */
     private function parseStoryLine(string $line): ?array
     {
@@ -139,29 +139,27 @@ class BlueprintMarkdownParser
         if ($meta['priority'] !== null) {
             $story['priority'] = $meta['priority'];
         }
-        if ($meta['status'] !== null) {
-            $story['status'] = $meta['status'];
-        }
 
         return $story;
     }
 
     /**
-     * @return array{string, array{priority: ?string, status: ?string}}
+     * @return array{string, array{priority: ?string}}
      */
     private function extractStoryMetadata(string $content): array
     {
         $meta = [
             'priority' => null,
-            'status' => null,
         ];
 
         // Extract bracketed metadata e.g. [Priority: High] [Status: In Progress]
         $content = preg_replace_callback('/\[(priority|status)\s*:\s*([^\]]+)\]/i', function ($matches) use (&$meta) {
             $key = strtolower($matches[1]);
-            $value = $this->normaliseMetaValue($key, $matches[2]);
-            if ($value !== null) {
-                $meta[$key] = $value;
+            if ($key === 'priority') {
+                $value = $this->normaliseMetaValue($key, $matches[2]);
+                if ($value !== null) {
+                    $meta[$key] = $value;
+                }
             }
             return '';
         }, $content);
@@ -173,9 +171,11 @@ class BlueprintMarkdownParser
             foreach ($segments as $segment) {
                 if (preg_match('/^(priority|status)\s*[:=]\s*(.+)$/i', $segment, $matches)) {
                     $key = strtolower($matches[1]);
-                    $value = $this->normaliseMetaValue($key, $matches[2]);
-                    if ($value !== null) {
-                        $meta[$key] = $value;
+                    if ($key === 'priority') {
+                        $value = $this->normaliseMetaValue($key, $matches[2]);
+                        if ($value !== null) {
+                            $meta[$key] = $value;
+                        }
                     }
                 }
             }
@@ -187,9 +187,11 @@ class BlueprintMarkdownParser
             foreach ($pairs as $pair) {
                 if (preg_match('/(priority|status)\s*[:=]\s*(.+)/i', $pair, $metaMatch)) {
                     $key = strtolower($metaMatch[1]);
-                    $value = $this->normaliseMetaValue($key, $metaMatch[2]);
-                    if ($value !== null) {
-                        $meta[$key] = $value;
+                    if ($key === 'priority') {
+                        $value = $this->normaliseMetaValue($key, $metaMatch[2]);
+                        if ($value !== null) {
+                            $meta[$key] = $value;
+                        }
                     }
                 }
             }
@@ -208,19 +210,6 @@ class BlueprintMarkdownParser
             return in_array($value, ['low', 'medium', 'high'], true) ? $value : null;
         }
 
-        if ($key === 'status') {
-            $map = [
-                'inprogress' => 'in_progress',
-                'in_progress' => 'in_progress',
-                'progress' => 'in_progress',
-                'todo' => 'todo',
-                'not_started' => 'todo',
-                'done' => 'done',
-                'completed' => 'done',
-            ];
-
-            return $map[$value] ?? ($map[str_replace('_', '', $value)] ?? null);
-        }
 
         return null;
     }

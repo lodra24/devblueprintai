@@ -31,7 +31,6 @@ Produce HIGH-CONVERTING AD ASSETS focused on ANGLES. Keep the schema EXACT:
         {
           "content": "string (1..1000) — ONE asset pack on ONE line, pipe-delimited fields: VarID=FF-01 | Angle=Fear Factor | Hook<=60:\"…\" | GoogleH1<=30:\"…\" | GoogleDesc<=90:\"…\" | MetaPrimary<=125:\"…\" | LP_H1<=60:\"…\" | EmailSubject<=60:\"…\" | CTA:\"…\" | Proof:\"…\" | Objection<=80:\"…\"",
           "priority": "low|medium|high",
-          "status": "todo|in_progress|done"
         }
       ]
     }
@@ -65,7 +64,7 @@ ASSET PACK RULES:
 - Vary language; avoid clichés. Prefer numbers, specifics, vivid verbs.
 - Derive product, audience, desired outcome, differentiator from the user prompt.
 - Produce 5–7 epics (angles). For each epic, produce 3–5 stories (asset packs).
-- Set "priority" = high for hypotheses with larger upside/clarity; else medium/low. Set "status" = "todo".
+- Set "priority" = high for hypotheses with larger upside/clarity; else medium/low.
 
 MEASUREMENT PLAN (schema_suggestions):
 - ad_angles(table): angle_code, angle_name, principle, promise, proof_device
@@ -102,7 +101,6 @@ Produce HIGH-CONVERTING AD ASSETS focused on ANGLES. Keep the schema EXACT:
         {
           "content": "string (1..1000) — ONE asset pack on ONE line, pipe-delimited fields: VarID=FF-01 | Angle=Fear Factor | Hook<=60:\"…\" | GoogleH1<=30:\"…\" | GoogleDesc<=90:\"…\" | MetaPrimary<=125:\"…\" | LP_H1<=60:\"…\" | EmailSubject<=60:\"…\" | CTA:\"…\" | Proof:\"…\" | Objection<=80:\"…\"",
           "priority": "low|medium|high",
-          "status": "todo|in_progress|done"
         }
       ]
     }
@@ -136,7 +134,7 @@ ASSET PACK RULES:
 - Vary language; avoid clichés. Prefer numbers, specifics, vivid verbs.
 - Derive product, audience, desired outcome, differentiator from the user prompt.
 - Produce 5–7 epics (angles). For each epic, produce 3–5 stories (asset packs).
-- Set "priority" = high for hypotheses with larger upside/clarity; else medium/low. Set "status" = "todo".
+- Set "priority" = high for hypotheses with larger upside/clarity; else medium/low.
 
 MEASUREMENT PLAN (schema_suggestions):
 - ad_angles(table): angle_code, angle_name, principle, promise, proof_device

@@ -32,7 +32,6 @@ function BlueprintPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState<BoardFilters>({
         priority: "all",
-        status: "all",
         overLimit: "all",
         angles: [],
     });
@@ -176,9 +175,6 @@ function BlueprintPage() {
             ) {
                 return false;
             }
-            if (filters.status !== "all" && story.status !== filters.status) {
-                return false;
-            }
             if (filters.overLimit !== "all") {
                 const hasOver =
                     (story.derived_fields?.over_limit_count ?? 0) > 0 ? "over" : "within";
@@ -198,7 +194,6 @@ function BlueprintPage() {
         const hasActiveFilters =
             normalizedSearch.length > 0 ||
             filters.priority !== "all" ||
-            filters.status !== "all" ||
             filters.overLimit !== "all" ||
             filters.angles.length > 0;
 
@@ -289,7 +284,7 @@ function BlueprintPage() {
                         availableAngles={availableAngles}
                         onClearFilters={() => {
                             setSearchTerm("");
-                            setFilters({ priority: "all", status: "all", overLimit: "all", angles: [] });
+                            setFilters({ priority: "all", overLimit: "all", angles: [] });
                         }}
                     />
                 ) : null}

@@ -32,7 +32,6 @@ class ValidateBlueprintDataAction
             'epics.*.stories' => ['present', 'array', 'min:1', 'max:' . $maxStories],
             'epics.*.stories.*.content' => ['required', 'string', 'max:' . $maxStory],
             'epics.*.stories.*.priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high'])],
-            'epics.*.stories.*.status' => ['sometimes', 'string', Rule::in(['todo', 'in_progress', 'done'])],
 
             'schema_suggestions' => ['nullable', 'array', 'max:' . $maxSchemas],
             'schema_suggestions.*.table_name' => [

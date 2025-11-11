@@ -15,7 +15,6 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('epic_id')->constrained()->onDelete('cascade');
             $table->text('content');
-            $table->string('status');
             $table->string('priority');
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
