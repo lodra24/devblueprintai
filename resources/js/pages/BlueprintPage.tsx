@@ -218,13 +218,14 @@ function BlueprintPage() {
     const renderContent = () => {
         if (isLoading || isAuthLoading) {
             return (
-                <>
-                    <div className="animate-pulse">
-                        <div className="h-8 w-3/4 rounded bg-gray-700" />
-                        <div className="mt-3 h-4 w-1/2 rounded bg-gray-700" />
+                <div className="space-y-8">
+                    <div className="surface-panel surface-panel--muted p-6 animate-pulse">
+                        <div className="h-5 w-2/5 rounded-full bg-stone/20" />
+                        <div className="mt-3 h-4 w-3/5 rounded-full bg-stone/15" />
+                        <div className="mt-6 h-3 w-1/3 rounded-full bg-stone/15" />
                     </div>
                     <BoardSkeleton />
-                </>
+                </div>
             );
         }
 
@@ -243,62 +244,89 @@ function BlueprintPage() {
                 error.message ??
                 "Could not load project data.";
             return (
-                <div className="mt-10 flex flex-col items-center justify-center text-center">
-                    <h1 className="text-3xl font-bold text-red-500">Error</h1>
-                    <p className="mt-4 text-lg text-gray-300">{message}</p>
+                <div className="surface-panel surface-panel--muted mt-10 px-6 py-8 text-center shadow-deep">
+                    <h1 className="font-display text-2xl font-semibold text-ink">
+                        Something went wrong
+                    </h1>
+                    <p className="mt-3 text-base text-stone">{message}</p>
                 </div>
             );
         }
 
+        if (!project) {
+            return (
+                <div className="surface-panel surface-panel--muted mt-10 px-6 py-10 text-center shadow-deep">
+                    <p className="text-base text-stone">
+                        We couldn't find this blueprint. Try refreshing the page or
+                        returning to your dashboard.
+                    </p>
+                </div>
+            );
+        }
+
+        const ideaText = project.idea_text?.trim();
+
         return (
             <>
-                <h1 className="flex items-center gap-4 text-3xl font-bold text-sky-400">
-                    <span>{project?.name}</span>
-                    {isFetching && (
-                        <span className="text-sm text-gray-400 animate-pulse">
-                            Updating...
-                        </span>
-                    )}
-                </h1>
-                <p className="mt-2 text-md italic text-gray-400">
-                    Idea: "{project?.idea_text ?? "No idea provided yet."}"
-                </p>
-                {project ? (
-                    <BlueprintStatusBar
-                        status={project.status}
-                        progress={project.progress}
-                        stage={project.stage}
-                        message={project.message}
-                    />
-                ) : null}
-                {project ? (
-                    <BoardFilterBar
-                        searchTerm={searchTerm}
-                        onSearchTermChange={setSearchTerm}
-                        filters={filters}
-                        onFiltersChange={(nextFilters) => setFilters(nextFilters)}
-                        sortBy={sortBy}
-                        onSortByChange={setSortBy}
-                        density={density}
-                        onDensityChange={setDensity}
-                        availableAngles={availableAngles}
-                        onClearFilters={() => {
-                            setSearchTerm("");
-                            setFilters({ priority: "all", overLimit: "all", angles: [] });
-                        }}
-                    />
-                ) : null}
-                {project ? (
-                    <Board
-                        project={project}
-                        onCardSelect={handleCardSelect}
-                        visibleEpics={filteredEpics}
-                        density={density}
-                        onManualSort={() => setSortBy("board")}
-                    />
-                ) : null}
-                {project ? <SchemaPanel project={project} /> : null}
-                {project ? <ComparePanel project={project} /> : null}
+                <header className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
+                        Blueprint overview
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="font-display text-3xl font-semibold text-ink md:text-4xl">
+                            {project.name}
+                        </h1>
+                        {isFetching && (
+                            <span className="text-sm font-medium text-stone">
+                                Syncing data...
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-base text-stone">
+                        Idea:{" "}
+                        {ideaText ? (
+                            <span className="font-medium text-ink/80">{ideaText}</span>
+                        ) : (
+                            <span className="text-stone/80">No idea provided yet.</span>
+                        )}
+                    </p>
+                </header>
+
+                <BlueprintStatusBar
+                    status={project.status}
+                    progress={project.progress}
+                    stage={project.stage}
+                    message={project.message}
+                />
+
+                <BoardFilterBar
+                    searchTerm={searchTerm}
+                    onSearchTermChange={setSearchTerm}
+                    filters={filters}
+                    onFiltersChange={(nextFilters) => setFilters(nextFilters)}
+                    sortBy={sortBy}
+                    onSortByChange={setSortBy}
+                    density={density}
+                    onDensityChange={setDensity}
+                    availableAngles={availableAngles}
+                    onClearFilters={() => {
+                        setSearchTerm("");
+                        setFilters({ priority: "all", overLimit: "all", angles: [] });
+                    }}
+                />
+
+                <Board
+                    project={project}
+                    onCardSelect={handleCardSelect}
+                    visibleEpics={filteredEpics}
+                    density={density}
+                    onManualSort={() => setSortBy("board")}
+                />
+
+                <div className="mt-12 space-y-10">
+                    <SchemaPanel project={project} />
+                    <ComparePanel project={project} />
+                </div>
             </>
         );
     };
@@ -306,16 +334,21 @@ function BlueprintPage() {
     const showAuthCallToAction = !user && isGuestProject;
 
     return (
-        <div className="min-h-screen bg-gray-900 p-4 text-white sm:p-6 md:p-8">
+        <main className="relative min-h-screen bg-frost text-ink">
+            <div className="grain" />
+            <div className="pointer-events-none fixed inset-0 bg-minimal" />
+
             {showClaimSuccess && (
-                <div className="fixed left-1/2 top-4 z-50 w-11/12 max-w-md -translate-x-1/2 animate-fade-in-down rounded-lg bg-green-500/90 p-4 text-white shadow-lg backdrop-blur-sm">
-                    <p className="text-center font-semibold">
+                <div className="fixed left-1/2 top-6 z-40 w-11/12 max-w-lg -translate-x-1/2">
+                    <div className="rounded-2xl border border-emerald-200 bg-white/95 px-5 py-4 text-center text-sm font-semibold text-emerald-900 shadow-deep">
                         Project successfully saved to your account!
-                    </p>
+                    </div>
                 </div>
             )}
 
-            <div className="mx-auto max-w-7xl pb-24">{renderContent()}</div>
+            <div className="relative z-10 mx-auto max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8">
+                {renderContent()}
+            </div>
 
             <ReaderPanel
                 story={selectedStory}
@@ -324,7 +357,7 @@ function BlueprintPage() {
             />
 
             {showAuthCallToAction && <AuthCallToAction />}
-        </div>
+        </main>
     );
 }
 

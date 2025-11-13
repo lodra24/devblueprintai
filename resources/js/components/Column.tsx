@@ -36,7 +36,7 @@ const Column: React.FC<ColumnProps> = ({ epic, onCardSelect, density = "comforta
     return (
         <div
             ref={setNodeRef}
-            className={`flex flex-col rounded-lg bg-gray-800/50 p-4 ${
+            className={`flex flex-col rounded-3xl border border-stone/20 bg-white/90 p-5 text-ink shadow-deep ${
                 density === "compact"
                     ? "gap-3"
                     : density === "cozy"
@@ -44,23 +44,25 @@ const Column: React.FC<ColumnProps> = ({ epic, onCardSelect, density = "comforta
                       : "gap-4"
             }`}
         >
-            <div className="px-1">
-                <h3 className="text-lg font-bold text-sky-300">{epic.title}</h3>
-                <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-300">
+            <div>
+                <h3 className="font-display text-xl font-semibold text-ink">
+                    {epic.title}
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-stone">
                     <MetricPill
                         label="Total"
                         value={metrics.total}
-                        colorClass="bg-slate-500/30 text-slate-200"
+                        colorClass="border border-stone/15 bg-frost text-ink/80"
                     />
                     <MetricPill
                         label="High"
                         value={metrics.high}
-                        colorClass="bg-rose-500/20 text-rose-100"
+                        colorClass="border border-rose-100 bg-rose-50 text-rose-700"
                     />
                     <MetricPill
                         label="Over"
                         value={metrics.over}
-                        colorClass="bg-amber-500/20 text-amber-100"
+                        colorClass="border border-amber-100 bg-amber-50 text-amber-700"
                     />
                 </div>
             </div>
@@ -102,9 +104,9 @@ interface MetricPillProps {
 
 const MetricPill: React.FC<MetricPillProps> = ({ label, value, colorClass }) => (
     <div className={`flex items-center gap-2 rounded-full px-3 py-1 font-semibold ${colorClass}`}>
-        <span className="inline-flex h-2 w-2 rounded-full bg-current opacity-70" />
+        <span className="inline-flex h-2 w-2 rounded-full bg-current opacity-60" />
         <span>{label}</span>
-        <span>{value}</span>
+        <span className="text-current">{value}</span>
     </div>
 );
 

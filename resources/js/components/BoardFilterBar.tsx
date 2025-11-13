@@ -104,18 +104,24 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
         }
     };
 
+    const hasActiveFilters =
+        filters.priority !== "all" ||
+        filters.overLimit !== "all" ||
+        filters.angles.length > 0 ||
+        searchTerm.trim() !== "";
+
     return (
-        <section className="mt-8 rounded-2xl border border-slate-700/60 bg-slate-900/70 p-5 shadow-lg shadow-slate-900/30">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <section className="surface-panel surface-panel--muted mt-8 px-5 py-6 shadow-deep">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
-                    <label className="flex w-full items-center gap-3 rounded-xl border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-200 focus-within:border-slate-500">
+                    <label className="flex w-full items-center gap-3 rounded-2xl border border-stone/20 bg-white px-4 py-2.5 text-sm text-stone shadow-sm focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10">
                         <svg
                             width="16"
                             height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
-                            className="text-slate-400"
+                            className="text-stone"
                         >
                             <path
                                 d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
@@ -135,14 +141,14 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                         <input
                             type="search"
                             value={searchTerm}
-                            onChange={handleSearchChange}
-                            placeholder="Search hook, copy, var ID..."
-                            className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+                            onInput={handleSearchChange}
+                            className="flex-1 bg-transparent text-base text-ink placeholder:text-stone focus:outline-none"
+                            placeholder="Search hooks, assets, angles..."
                         />
                     </label>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
                     <Select
                         label="Priority"
                         options={priorityOptions}
@@ -174,13 +180,13 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                 </div>
             </div>
 
-            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="mt-6 space-y-4">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone/70">
                         Angles
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                        {availableAngles.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {availableAngles.length > 0 ? (
                             availableAngles.map((angle) => {
                                 const isActive = filters.angles.includes(angle);
                                 return (
@@ -190,8 +196,8 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                                         onClick={() => toggleAngle(angle)}
                                         className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                                             isActive
-                                                ? "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
-                                                : "bg-slate-800 text-slate-300 border border-slate-700/60 hover:bg-slate-700"
+                                                ? "border border-accent/40 bg-accent text-white shadow-deep"
+                                                : "border border-stone/20 bg-pastel-lilac text-ink/80 hover:border-accent/30"
                                         }`}
                                     >
                                         {angle}
@@ -199,7 +205,7 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                                 );
                             })
                         ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-stone">
                                 No angles detected yet.
                             </span>
                         )}
@@ -212,7 +218,7 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                             key={chip.label}
                             type="button"
                             onClick={chip.onRemove}
-                            className="flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
+                            className="flex items-center gap-2 rounded-full border border-stone/20 bg-white px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/30"
                         >
                             {chip.label}
                             <svg
@@ -221,7 +227,7 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="text-slate-400"
+                                className="text-stone"
                             >
                                 <path
                                     d="M7 7L17 17M7 17L17 7"
@@ -233,14 +239,11 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                             </svg>
                         </button>
                     ))}
-                    {(filters.priority !== "all" ||
-                        filters.overLimit !== "all" ||
-                        filters.angles.length > 0 ||
-                        searchTerm.trim() !== "") && (
+                    {hasActiveFilters && (
                         <button
                             type="button"
                             onClick={onClearFilters}
-                            className="rounded-full border border-slate-600/60 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-slate-400"
+                            className="rounded-full border border-stone/30 px-3 py-1 text-xs font-semibold text-stone transition hover:border-ink/30"
                         >
                             Clear filters
                         </button>
@@ -269,12 +272,12 @@ const Select = <T extends string>({
     value,
     onChange,
 }: SelectProps<T>) => (
-    <label className="flex flex-col text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <label className="flex flex-col text-xs font-semibold uppercase tracking-[0.2em] text-stone/70">
         {label}
         <select
             value={value}
             onChange={(event) => onChange(event.currentTarget.value as T)}
-            className="mt-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none focus:border-slate-500"
+            className="mt-1 rounded-xl border border-stone/20 bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/15"
         >
             {options.map((option) => (
                 <option key={option.value} value={option.value}>

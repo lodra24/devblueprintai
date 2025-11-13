@@ -18,22 +18,22 @@ const clampProgress = (value: number | null | undefined): number => {
 
 const toneStyles: Record<
     "info" | "success" | "danger",
-    { container: string; accent: string }
+    { container: string; accent: string; message: string }
 > = {
     info: {
-        container:
-            "border-sky-700/60 bg-sky-900/40 text-sky-100 shadow-[0_0_25px_rgba(56,189,248,0.12)]",
-        accent: "bg-sky-500",
+        container: "border-accent/30",
+        accent: "bg-accent",
+        message: "text-accent/80",
     },
     success: {
-        container:
-            "border-emerald-700/60 bg-emerald-900/40 text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.15)]",
+        container: "border-emerald-200",
         accent: "bg-emerald-400",
+        message: "text-emerald-700",
     },
     danger: {
-        container:
-            "border-rose-700/70 bg-rose-950/60 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.18)]",
+        container: "border-rose-200",
         accent: "bg-rose-500",
+        message: "text-rose-700",
     },
 };
 
@@ -114,27 +114,28 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
         <section
             role="status"
             aria-live="polite"
-            className={`mt-6 rounded-xl border px-4 py-4 transition-all duration-300 ${styles.container}`}
+            className={`surface-panel surface-panel--muted mt-6 px-5 py-6 transition-all duration-300 ${styles.container}`}
         >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
                         Blueprint status
                     </p>
-                    <h2 className="text-lg font-semibold">{copy.title}</h2>
-                    <p className="mt-1 text-sm text-white/70">
-                        {copy.description}
-                    </p>
+                    <h2 className="font-display text-xl font-semibold text-ink">
+                        {copy.title}
+                    </h2>
+                    <p className="text-sm text-stone">{copy.description}</p>
                 </div>
                 {showProgress && (
-                    <div className="flex items-center gap-2 text-sm font-medium text-white/80">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-ink/80 shadow-sm">
+                        <span>Progress</span>
                         <span>{currentProgress}%</span>
                     </div>
                 )}
             </div>
 
             {showProgress && (
-                <div className="mt-4 h-2 w-full rounded-full bg-white/10">
+                <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-stone/20">
                     <div
                         className={`h-full rounded-full transition-all duration-500 ease-out ${styles.accent}`}
                         style={{ width: `${currentProgress}%` }}
@@ -144,9 +145,7 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
 
             {message && (
                 <p
-                    className={`mt-3 text-sm font-medium ${
-                        tone === "danger" ? "text-rose-100" : "text-white/80"
-                    }`}
+                    className={`mt-4 text-sm font-medium ${styles.message}`}
                 >
                     {message}
                 </p>

@@ -58,6 +58,12 @@ type ReorderIntent = {
     afterStoryId: string | null;
 };
 
+const PRIORITY_BADGE: Record<UserStory["priority"], string> = {
+    high: "border border-rose-200 bg-rose-50 text-rose-700",
+    medium: "border border-amber-200 bg-amber-50 text-amber-700",
+    low: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+};
+
 const resolveReorderIntent = (
     event: DragEndEvent,
     project: Project
@@ -294,62 +300,54 @@ const Board: React.FC<BoardProps> = ({
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            {epicsToRender.length === 0 ? (
-                <div className="mt-10 rounded-xl border border-slate-700/60 bg-slate-900/70 p-6 text-center text-sm text-slate-300">
-                    No stories match the current filters.
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 gap-6 mt-8 items-start md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {epicsToRender.map((epic) => (
-                        <Column
-                            key={epic.id}
-                            epic={epic}
-                            onCardSelect={onCardSelect}
-                            density={density}
-                        />
-                    ))}
-                </div>
-            )}
-            <DragOverlay>
-                {activeStory ? (
-                    <div className="min-w-[240px] max-w-[280px] rounded-xl border border-slate-600/60 bg-slate-800/95 p-4 shadow-2xl ring-1 ring-slate-900/30">
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide text-slate-300/90">
-                                {activeStory.derived_fields?.meta?.var_id && (
-                                    <span className="rounded bg-slate-700/80 px-2 py-0.5 font-semibold text-slate-200">
-                                        {activeStory.derived_fields.meta.var_id}
-                                    </span>
-                                )}
-                                <span
-                                    className={`rounded-full px-2 py-0.5 font-semibold ${
-                                        activeStory.priority === "high"
-                                            ? "bg-rose-500/15 text-rose-200 border border-rose-400/40"
-                                            : activeStory.priority === "medium"
-                                            ? "bg-amber-500/15 text-amber-200 border border-amber-400/40"
-                                            : "bg-emerald-500/15 text-emerald-200 border border-emerald-400/40"
-                                    }`}
-                                >
-                                    {activeStory.priority}
-                                </span>
-                            </div>
-                        </div>
-                        <p
-                            className="text-sm font-semibold text-slate-100"
-                            style={{
-                                display: "-webkit-box",
-                                WebkitLineClamp: 1,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                            }}
+        {epicsToRender.length === 0 ? (
+            <div className="mt-10 rounded-2xl border border-stone/20 bg-white/90 p-6 text-center text-sm text-stone shadow-deep">
+                No stories match the current filters.
+            </div>
+        ) : (
+            <div className="mt-8 grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {epicsToRender.map((epic) => (
+                    <Column
+                        key={epic.id}
+                        epic={epic}
+                        onCardSelect={onCardSelect}
+                        density={density}
+                    />
+                ))}
+            </div>
+        )}
+        <DragOverlay>
+            {activeStory ? (
+                <div className="min-w-[240px] max-w-[280px] rounded-2xl border border-stone/20 bg-white/95 p-4 text-ink shadow-deep ring-2 ring-accent/20">
+                    <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-wide text-stone">
+                        {activeStory.derived_fields?.meta?.var_id && (
+                            <span className="rounded-md bg-pastel-mint/80 px-2 py-0.5 font-semibold text-ink/80">
+                                {activeStory.derived_fields.meta.var_id}
+                            </span>
+                        )}
+                        <span
+                            className={`rounded-full px-2 py-0.5 font-semibold ${PRIORITY_BADGE[activeStory.priority]}`}
                         >
-                            {activeStory.derived_fields?.assets?.hook ||
-                                "No hook provided"}
-                        </p>
+                            {activeStory.priority}
+                        </span>
                     </div>
-                ) : null}
-            </DragOverlay>
-        </DndContext>
-    );
+                    <p
+                        className="text-sm font-semibold text-ink"
+                        style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 1,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {activeStory.derived_fields?.assets?.hook ||
+                            "No hook provided"}
+                    </p>
+                </div>
+            ) : null}
+        </DragOverlay>
+    </DndContext>
+);
 };
 
 export default Board;

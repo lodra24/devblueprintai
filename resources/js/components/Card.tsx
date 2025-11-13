@@ -26,9 +26,9 @@ const ASSET_DEFINITIONS: Array<{
 ];
 
 const PRIORITY_STYLES: Record<UserStory["priority"], string> = {
-    high: "bg-rose-500/15 text-rose-300 border border-rose-400/40",
-    medium: "bg-amber-500/15 text-amber-300 border border-amber-400/40",
-    low: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/40",
+    high: "border border-rose-200 bg-rose-50 text-rose-700",
+    medium: "border border-amber-200 bg-amber-50 text-amber-700",
+    low: "border border-emerald-200 bg-emerald-50 text-emerald-700",
 };
 
 const densityContainerClasses: Record<BoardDensity, string> = {
@@ -104,23 +104,23 @@ const Card: React.FC<CardProps> = ({
                 return (
                     <div
                         key={key}
-                        className={`group flex min-w-0 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                        className={`flex min-w-0 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
                             overLimit
-                                ? "border-rose-400 bg-rose-500/10 text-rose-200"
-                                : "border-slate-500/40 bg-slate-700/60 text-slate-100"
+                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                : "border-stone/20 bg-frost text-ink/70"
                         }`}
                         title={typeof value === "string" ? value : undefined}
                     >
                         <span className="truncate">{label}:</span>
-                        <span className="truncate text-slate-200">
-                            “{truncatePreview(value)}”
+                        <span className="truncate text-ink/60">
+                            "{truncatePreview(value)}"
                         </span>
                         {limit !== undefined && (
                             <span
                                 className={`ml-auto inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                     overLimit
-                                        ? "bg-rose-500/20 text-rose-100"
-                                        : "bg-slate-800/80 text-slate-200"
+                                        ? "bg-rose-100 text-rose-700"
+                                        : "bg-stone/20 text-stone"
                                 }`}
                             >
                                 {count}/{limit}
@@ -150,14 +150,16 @@ const Card: React.FC<CardProps> = ({
                     handleCardClick();
                 }
             }}
-            className={`flex flex-col rounded-xl border border-slate-700/60 bg-slate-800/90 shadow-lg transition ${densityContainerClasses[density]} ${
-                isDragging ? "opacity-70 ring-2 ring-sky-500/60" : "hover:border-slate-600"
-            }`}
+            className={`flex flex-col rounded-2xl border border-stone/20 bg-white/95 text-ink shadow-deep transition ${densityContainerClasses[density]} ${
+                isDragging
+                    ? "ring-2 ring-accent/40 opacity-80"
+                    : "hover:border-accent/30"
+            } focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                     {meta.var_id && (
-                        <span className="rounded-md bg-slate-700/70 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+                        <span className="rounded-md bg-pastel-mint/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink/80">
                             {meta.var_id}
                         </span>
                     )}
@@ -167,14 +169,14 @@ const Card: React.FC<CardProps> = ({
                         {story.priority}
                     </span>
                     {meta.angle_name && (
-                        <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-200">
+                        <span className="rounded-full border border-stone/20 bg-pastel-rose/80 px-2 py-0.5 text-[11px] font-medium text-ink/70">
                             {meta.angle_name}
                         </span>
                     )}
                 </div>
                 <button
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-600/60 bg-slate-700/50 text-slate-300 transition hover:bg-slate-700 active:cursor-grabbing"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-stone/20 bg-white text-stone transition hover:border-accent/30 active:cursor-grabbing"
                     aria-label="Drag story"
                     onClick={(event) => {
                         event.stopPropagation();
@@ -188,7 +190,7 @@ const Card: React.FC<CardProps> = ({
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        className="text-slate-300"
+                        className="text-current"
                     >
                         <path
                             d="M10 4H14M10 9H14M10 14H14M10 19H14"
@@ -203,7 +205,7 @@ const Card: React.FC<CardProps> = ({
 
             <div className="space-y-3">
                 <div
-                    className={`font-semibold text-slate-50 ${densityHookClass[density]}`}
+                    className={`font-semibold text-ink ${densityHookClass[density]}`}
                     style={{
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
@@ -226,10 +228,12 @@ const Card: React.FC<CardProps> = ({
 
             {ctaText && (
                 <div
-                    className={`mt-2 flex items-center justify-between ${densityCTAClass[density]} text-slate-300`}
+                    className={`mt-2 flex items-center justify-between ${densityCTAClass[density]} text-stone`}
                 >
-                    <span className="uppercase tracking-wide text-slate-400">CTA</span>
-                    <span className="truncate font-medium text-slate-100" title={ctaText}>
+                    <span className="uppercase tracking-wide text-stone/70">
+                        CTA
+                    </span>
+                    <span className="truncate font-medium text-ink" title={ctaText}>
                         {ctaText}
                     </span>
                 </div>
