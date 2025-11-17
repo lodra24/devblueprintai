@@ -6,6 +6,8 @@ type BlueprintStatusBarProps = {
     progress: number | null | undefined;
     stage?: string | null;
     message?: string | null;
+    onRetry?: () => void;
+    isRetrying?: boolean;
 };
 
 const clampProgress = (value: number | null | undefined): number => {
@@ -87,11 +89,51 @@ const stageCopy: Record<string, { title: string; description?: string }> = {
     },
 };
 
+const RetryIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M3 8.5V4h4.5"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M21 15.5V20h-4.5"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M20 9a8 8 0 0 0-13.657-4.95L3 7.5"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M4 15a8 8 0 0 0 13.657 4.95L21 16.5"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
 const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
     status,
     progress,
     stage,
     message,
+    onRetry,
+    isRetrying = false,
 }) => {
     const baseCopy = statusCopy[status];
     const overrideCopy =
@@ -110,6 +152,8 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
 
     const showProgress = ["generating", "parsing"].includes(status);
     const currentProgress = clampProgress(progress);
+    const showRetryButton = status === "failed" && typeof onRetry === "function";
+
     return (
         <section
             role="status"
@@ -126,10 +170,33 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
                     </h2>
                     <p className="text-sm text-stone">{copy.description}</p>
                 </div>
-                {showProgress && (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-ink/80 shadow-sm">
-                        <span>Progress</span>
-                        <span>{currentProgress}%</span>
+                {(showProgress || showRetryButton) && (
+                    <div className="flex items-center gap-3">
+                        {showProgress && (
+                            <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-ink/80 shadow-sm">
+                                <span>Progress</span>
+                                <span>{currentProgress}%</span>
+                            </div>
+                        )}
+                        {showRetryButton && (
+                            <button
+                                type="button"
+                                onClick={onRetry}
+                                disabled={isRetrying}
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-100 bg-white/90 text-rose-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                                aria-label={
+                                    isRetrying
+                                        ? "Retrying blueprint generation"
+                                        : "Retry blueprint generation"
+                                }
+                            >
+                                <RetryIcon
+                                    className={`h-5 w-5 ${
+                                        isRetrying ? "animate-spin" : ""
+                                    }`}
+                                />
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

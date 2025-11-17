@@ -105,7 +105,7 @@
         background: rgba(255, 253, 250, 0.94);
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 18px 45px rgba(15, 23, 42, 0.08);
+            0 12px 30px rgba(15, 23, 42, 0.07);
         backdrop-filter: blur(16px);
         overflow: hidden;
     }
@@ -122,7 +122,7 @@
 
     .surface-panel--muted {
         background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
     }
 
     /* Horizontal scroll helper */
@@ -202,12 +202,12 @@
     }
 
     /* Dashboard row card */
-    .row-card {
+.row-card {
         position: relative;
         background: #fff;
         border: 1px solid rgba(120, 113, 108, 0.18);
         border-radius: 16px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
         transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
         overflow: hidden;
     }
@@ -222,10 +222,10 @@
         background: linear-gradient(90deg, #EEF1FF, #EAF7F5);
     }
 
-    .row-card:hover {
+.row-card:hover {
         transform: translateY(-1px);
         border-color: rgba(99, 102, 241, 0.25);
-        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
     }
 
     .row-link {

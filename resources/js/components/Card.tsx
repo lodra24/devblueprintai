@@ -169,7 +169,7 @@ const Card: React.FC<CardProps> = ({
                         {story.priority}
                     </span>
                     {meta.angle_name && (
-                        <span className="rounded-full border border-stone/20 bg-pastel-rose/80 px-2 py-0.5 text-[11px] font-medium text-ink/70">
+                        <span className="rounded-full border border-accent/20 bg-pastel-lilac/80 px-2 py-0.5 text-[11px] font-medium text-accent/80">
                             {meta.angle_name}
                         </span>
                     )}

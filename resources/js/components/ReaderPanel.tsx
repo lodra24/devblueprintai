@@ -45,6 +45,30 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
         () => new Set<string>(derived?.over_limit_fields ?? []),
         [derived?.over_limit_fields]
     );
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        const root = document.documentElement;
+        const originalOverflow = root.style.overflow;
+        const originalPaddingRight = root.style.paddingRight;
+
+        if (isOpen) {
+            const scrollBarWidth = window.innerWidth - root.clientWidth;
+            root.style.overflow = "hidden";
+            if (scrollBarWidth > 0) {
+                root.style.paddingRight = `${scrollBarWidth}px`;
+            }
+        } else {
+            root.style.overflow = originalOverflow || "";
+            root.style.paddingRight = originalPaddingRight || "";
+        }
+
+        return () => {
+            root.style.overflow = originalOverflow || "";
+            root.style.paddingRight = originalPaddingRight || "";
+        };
+    }, [isOpen]);
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const copyTimeoutRef = useRef<number | null>(null);
 
@@ -157,7 +181,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
             <aside
                 className={`absolute right-0 top-0 h-full w-full max-w-xl transform transition-transform duration-300 ease-out ${
                     isOpen ? "translate-x-0" : "translate-x-full"
-                } border-l border-stone/20 bg-white/98 text-ink shadow-deep`}
+                } border-l border-stone/20 bg-white text-ink shadow-deep`}
             >
                 <div className="flex h-full flex-col">
                     <header className="flex items-start justify-between border-b border-stone/20 px-6 py-5">
@@ -273,6 +297,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                             }
                                             copied={copiedKey === CTA_FIELD.key}
                                             accent
+                                            variant="compact"
                                         />
                                         {REASONING_FIELDS.map(
                                             ({ key, label }) => (
@@ -291,6 +316,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                                         )
                                                     }
                                                     copied={copiedKey === key}
+                                                    variant="compact"
                                                 />
                                             )
                                         )}
@@ -341,6 +367,7 @@ interface ReaderPanelFieldProps {
     onCopy: () => void;
     copied: boolean;
     accent?: boolean;
+    variant?: "default" | "compact";
 }
 
 const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
@@ -352,10 +379,50 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
     onCopy,
     copied,
     accent = false,
+    variant = "default",
 }) => {
     const hasContent = !!value;
     const effectiveCount =
         typeof count === "number" ? count : value ? value.length : 0;
+    const isCompact = variant === "compact";
+    const countLabel =
+        limit !== undefined ? `${effectiveCount}/${limit}` : `${effectiveCount} chars`;
+    const countClass =
+        limit !== undefined && overLimit ? "text-rose-600" : "text-stone";
+
+    if (isCompact) {
+        return (
+            <div
+                className={`rounded-2xl border px-4 py-4 transition ${
+                    overLimit
+                        ? "border-rose-200 bg-rose-50"
+                        : accent
+                        ? "border-accent/30 bg-pastel-lilac/70"
+                        : "border-stone/20 bg-white"
+                }`}
+            >
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone/70">
+                    {label}
+                </p>
+                <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">
+                    {hasContent ? (
+                        value
+                    ) : (
+                        <span className="text-stone/70">No content available.</span>
+                    )}
+                </div>
+                <div className="mt-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-stone/70">
+                    <span className={countClass}>{countLabel}</span>
+                    <CopyButton
+                        disabled={!hasContent}
+                        onClick={onCopy}
+                        copied={copied}
+                        variant="icon"
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -374,20 +441,9 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {limit !== undefined && (
-                        <span
-                            className={`text-xs font-semibold ${
-                                overLimit ? "text-rose-600" : "text-stone"
-                            }`}
-                        >
-                            {effectiveCount}/{limit}
-                        </span>
-                    )}
-                    {limit === undefined && hasContent && (
-                        <span className="text-xs font-semibold text-stone">
-                            {effectiveCount} chars
-                        </span>
-                    )}
+                    <span className={`text-xs font-semibold ${countClass}`}>
+                        {countLabel}
+                    </span>
                     <CopyButton
                         disabled={!hasContent}
                         onClick={onCopy}
@@ -399,9 +455,7 @@ const ReaderPanelField: React.FC<ReaderPanelFieldProps> = ({
                 {hasContent ? (
                     value
                 ) : (
-                    <span className="text-stone/70">
-                        No content available.
-                    </span>
+                    <span className="text-stone/70">No content available.</span>
                 )}
             </div>
         </div>
@@ -412,52 +466,99 @@ interface CopyButtonProps {
     onClick: () => void;
     copied: boolean;
     disabled?: boolean;
+    variant?: "default" | "icon";
 }
 
 const CopyButton: React.FC<CopyButtonProps> = ({
     onClick,
     copied,
     disabled,
-}) => (
-    <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
-            disabled
-                ? "cursor-not-allowed border-stone/20 bg-stone/10 text-stone/50"
-                : copied
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-stone/20 bg-white text-stone hover:border-accent/30"
-        }`}
-        aria-label="Copy field"
-    >
-        <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-current"
+    variant = "default",
+}) => {
+    if (variant === "icon") {
+        return (
+            <button
+                type="button"
+                onClick={onClick}
+                disabled={disabled}
+                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[0px] shadow-sm transition ${
+                    disabled
+                        ? "cursor-not-allowed border-stone/20 bg-stone/10 text-stone/40"
+                        : copied
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-stone/20 bg-white text-stone hover:border-accent/40"
+                }`}
+                aria-label={copied ? "Field copied" : "Copy field"}
+                title={copied ? "Copied!" : "Copy"}
+            >
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-current"
+                >
+                    <path
+                        d="M8 8H16V16H8V8Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        d="M16 4H6C4.89543 4 4 4.89543 4 6V16"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
+            </button>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition ${
+                disabled
+                    ? "cursor-not-allowed border-stone/20 bg-stone/10 text-stone/50"
+                    : copied
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-stone/20 bg-white text-stone hover:border-accent/30"
+            }`}
+            aria-label="Copy field"
         >
-            <path
-                d="M8 8H16V16H8V8Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M16 4H6C4.89543 4 4 4.89543 4 6V16"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        {copied ? "Copied" : "Copy"}
-    </button>
-);
+            <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-current"
+            >
+                <path
+                    d="M8 8H16V16H8V8Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d="M16 4H6C4.89543 4 4 4.89543 4 6V16"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+            {copied ? "Copied" : "Copy"}
+        </button>
+    );
+};
 
 interface ActionButtonProps {
     label: string;

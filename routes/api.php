@@ -24,7 +24,11 @@ Route::apiResource('projects', ProjectController::class)->only([
     'store', 'show'
 ]);
 
-Route::post('/projects/claim', [ClaimProjectController::class, '__invoke'])->middleware('auth:sanctum')->name('projects.claim');
+Route::post('/projects/claim', [ClaimProjectController::class, '__invoke'])
+    ->middleware('auth:sanctum')
+    ->name('projects.claim');
+Route::post('/projects/{project}/retry', [ProjectController::class, 'retry'])
+    ->name('projects.retry');
 
 // --- CRUD & Reorder Routes ---
 Route::middleware('auth:sanctum')->group(function () {

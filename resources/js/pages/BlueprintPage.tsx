@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthCallToAction from "@/components/AuthCallToAction";
 import { GUEST_PROJECT_ID_KEY } from "@/constants";
 import { useBlueprintData } from "@/hooks/useBlueprintData";
+import { useBlueprintStatusBarVisibility } from "@/hooks/useBlueprintStatusBarVisibility";
+import { useRetryBlueprint } from "@/hooks/useRetryBlueprint";
 import { BoardSkeleton } from "@/components/Skeletons";
 import Board from "@/components/Board";
 import BlueprintStatusBar from "@/components/BlueprintStatusBar";
@@ -37,6 +39,11 @@ function BlueprintPage() {
     });
     const [sortBy, setSortBy] = useState<BoardSortOption>("priority");
     const [density, setDensity] = useState<BoardDensity>("comfortable");
+    const showStatusBar = useBlueprintStatusBarVisibility(
+        project?.id,
+        project?.status
+    );
+    const { retry: retryBlueprint, isRetrying } = useRetryBlueprint(project?.id);
 
     useEffect(() => {
         if (location.state?.claimed) {
@@ -292,12 +299,20 @@ function BlueprintPage() {
                     </p>
                 </header>
 
-                <BlueprintStatusBar
-                    status={project.status}
-                    progress={project.progress}
-                    stage={project.stage}
-                    message={project.message}
-                />
+                {showStatusBar && (
+                    <BlueprintStatusBar
+                        status={project.status}
+                        progress={project.progress}
+                        stage={project.stage}
+                        message={project.message}
+                        onRetry={
+                            project.status === "failed"
+                                ? retryBlueprint
+                                : undefined
+                        }
+                        isRetrying={isRetrying}
+                    />
+                )}
 
                 <BoardFilterBar
                     searchTerm={searchTerm}

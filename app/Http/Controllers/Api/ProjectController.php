@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ProjectStatus;
+use App\Events\BlueprintStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -94,5 +95,39 @@ class ProjectController extends Controller
         $project->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Retry blueprint generation for a failed project.
+     */
+    public function retry(Project $project)
+    {
+        if ($project->user_id !== null) {
+            $this->authorize('update', $project);
+        }
+
+        if ($project->status !== ProjectStatus::Failed) {
+            return response()->json([
+                'message' => 'Only failed blueprints can be retried.',
+            ], 422);
+        }
+
+        $project->forceFill([
+            'status' => ProjectStatus::Pending,
+            'progress' => 0,
+        ])->save();
+
+        BlueprintStatusUpdated::dispatch(
+            $project->getKey(),
+            ProjectStatus::Pending,
+            0,
+            'pending'
+        );
+
+        GenerateBlueprintJob::dispatch($project->id);
+
+        return response()->json([
+            'message' => 'Blueprint generation retried.',
+        ], 202);
     }
 }

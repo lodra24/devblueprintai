@@ -77,6 +77,12 @@ export const claimProject = async (projectId: string) => {
     return response.data;
 };
 
+export const retryBlueprintGeneration = async (projectId: string) => {
+    await ensureCsrf();
+    const response = await http.post(`/projects/${projectId}/retry`);
+    return response.data;
+};
+
 export const getUser = async () => {
     try {
         const response = await http.get("/user");

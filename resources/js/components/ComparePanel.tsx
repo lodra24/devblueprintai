@@ -68,6 +68,9 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
         "all" | "over" | "within"
     >("all");
     const [viewMode, setViewMode] = useState<ViewMode>("table");
+    const [isDesktop, setIsDesktop] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+    );
 
     const filteredStories = useMemo(() => {
         return stories.filter(({ story, angle, overLimit }) => {
@@ -113,6 +116,22 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
                 : [...prev, angle]
         );
     };
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        const mql = window.matchMedia("(min-width: 1024px)");
+        const handleChange = () => {
+            setIsDesktop(mql.matches);
+            if (!mql.matches) {
+                setViewMode("stack");
+            }
+        };
+        handleChange();
+        mql.addEventListener("change", handleChange);
+        return () => mql.removeEventListener("change", handleChange);
+    }, []);
 
     const renderTableView = () => (
         <div className="relative">
@@ -232,7 +251,7 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
                 return (
                     <article
                         key={story.id}
-                        className="rounded-3xl border border-stone/20 bg-frost/80 p-5 text-sm shadow-sm"
+                        className="rounded-3xl border border-stone/20 bg-white p-5 text-sm shadow-sm"
                     >
                         <header className="flex flex-wrap items-center gap-3">
                             <div>
@@ -329,7 +348,8 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
             );
         }
 
-        return viewMode === "table" ? renderTableView() : renderStackView();
+        const activeView = isDesktop ? viewMode : "stack";
+        return activeView === "table" ? renderTableView() : renderStackView();
     };
 
     return (
@@ -344,30 +364,32 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
                         by side.
                     </p>
                 </div>
-                <div className="inline-flex items-center gap-1 rounded-full border border-stone/20 bg-white p-1 text-xs font-semibold uppercase tracking-[0.2em] text-stone">
-                    <button
-                        type="button"
-                        className={`rounded-full px-3 py-1 transition ${
-                            viewMode === "table"
-                                ? "bg-ink text-white shadow-sm"
-                                : "text-stone"
-                        }`}
-                        onClick={() => setViewMode("table")}
-                    >
-                        Table
-                    </button>
-                    <button
-                        type="button"
-                        className={`rounded-full px-3 py-1 transition ${
-                            viewMode === "stack"
-                                ? "bg-ink text-white shadow-sm"
-                                : "text-stone"
-                        }`}
-                        onClick={() => setViewMode("stack")}
-                    >
-                        Reader
-                    </button>
-                </div>
+                {isDesktop && (
+                    <div className="inline-flex items-center gap-1 rounded-full border border-stone/20 bg-white p-1 text-xs font-semibold uppercase tracking-[0.2em] text-stone">
+                        <button
+                            type="button"
+                            className={`rounded-full px-3 py-1 transition ${
+                                viewMode === "table"
+                                    ? "bg-ink text-white shadow-sm"
+                                    : "text-stone"
+                            }`}
+                            onClick={() => setViewMode("table")}
+                        >
+                            Table
+                        </button>
+                        <button
+                            type="button"
+                            className={`rounded-full px-3 py-1 transition ${
+                                viewMode === "stack"
+                                    ? "bg-ink text-white shadow-sm"
+                                    : "text-stone"
+                            }`}
+                            onClick={() => setViewMode("stack")}
+                        >
+                            Reader
+                        </button>
+                    </div>
+                )}
             </header>
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
