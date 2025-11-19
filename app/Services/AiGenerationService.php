@@ -63,25 +63,37 @@ class AiGenerationService
             ->retry(
                 4,
                 function (int $attempt, $exception) {
-                    // Respect Retry-After for 429 when available
                     if ($exception instanceof RequestException && $exception->response && $exception->response->status() === 429) {
                         $retryAfter = $exception->response->header('Retry-After');
-                        if ($retryAfter !== null && $retryAfter !== '') {
-                            if (is_numeric($retryAfter)) {
-                                return (int) $retryAfter * 1000;
-                            }
+
+                        if (is_numeric($retryAfter)) {
+                            return max(1000, (int) $retryAfter * 1000);
+                        }
+
+                        if (!empty($retryAfter)) {
                             $ts = strtotime($retryAfter);
                             if ($ts) {
-                                $ms = max(100, ($ts - time()) * 1000);
-                                return min($ms, 15000);
+                                return max(1000, ($ts - time()) * 1000);
                             }
                         }
+
+                        // No usable Retry-After, fall back to safe wait window
+                        return 65000;
                     }
 
-                    // Exponential backoff with jitter
-                    $base = 500 * (2 ** max(0, $attempt - 1)); // 500, 1000, 2000, 4000
-                    $jitter = random_int(-100, 100);
-                    return min(max(100, $base + $jitter), 15000);
+                    if ($attempt === 1) {
+                        return 2000;
+                    }
+
+                    if ($attempt === 2) {
+                        return 65000;
+                    }
+
+                    if ($attempt === 3) {
+                        return 2000;
+                    }
+
+                    return 1000;
                 },
                 function ($exception) {
                     return $exception instanceof ConnectionException

@@ -23,6 +23,11 @@ class GenerateBlueprintJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /**
+     * Maximum seconds this job may run (aligns with AI retry backoff windows).
+     */
+    public $timeout = 300;
+
     public function __construct(public string $projectId)
     {
     }
