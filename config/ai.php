@@ -66,14 +66,23 @@ ASSET PACK RULES:
 - Produce 5–7 epics (angles). For each epic, produce 3–5 stories (asset packs).
 - Set "priority" = high for hypotheses with larger upside/clarity; else medium/low.
 
-MEASUREMENT PLAN (schema_suggestions):
-- ad_angles(table): angle_code, angle_name, principle, promise, proof_device
-- ad_messages(table): var_id, angle_code, primary_claim, proof, cta, objection
-- ad_assets(table): var_id, platform, field, text, char_limit
-- experiments(table): experiment_id, hypothesis, platform, audience, primary_kpi, success_criteria, start_date, end_date
-- kpis(table): metric_name, definition, formula, target
-- audiences(table): segment_name, definition, size_estimate
-- utm_conventions(table): source, medium, campaign_pattern, content_pattern
+PERSONA SNAPSHOT (schema_suggestions):
+- persona_core(table): age_range, life_stage, identity, income_bracket, short_description
+- persona_goals(table): primary_goal, secondary_goals, success_definition, emotional_drivers
+- persona_pains(table): pains, frustrations, previous_failures, fears
+- persona_objections(table): price_objection, trust_objection, effort_objection, fit_objection
+- persona_triggers(table): trigger_events, decision_criteria, info_sources, urgency_signals
+- persona_messaging(table): primary_promise, value_prop, tone_of_voice, words_to_use, words_to_avoid
+
+COLUMN FORMAT:
+- Return 4–6 rows per table.
+- Each row must be: field_key: natural sentence
+- field_key MUST be lower_snake_case.
+- After the first colon, write normal copy (no underscores), ≤80 chars, locale-safe (allow diacritics).
+- Examples:
+  age_range: 25–34, şehirli, dijitale alışkın
+  price_objection: "zaten çok ürün denedim, buna değer mi?"
+  tone_of_voice: sıcak, destekleyici, yargılamayan; abartıdan kaçın
 
 Return VALID JSON only. No markdown, no comments, no extra keys.
 TEXT,
@@ -136,14 +145,23 @@ ASSET PACK RULES:
 - Produce 5–7 epics (angles). For each epic, produce 3–5 stories (asset packs).
 - Set "priority" = high for hypotheses with larger upside/clarity; else medium/low.
 
-MEASUREMENT PLAN (schema_suggestions):
-- ad_angles(table): angle_code, angle_name, principle, promise, proof_device
-- ad_messages(table): var_id, angle_code, primary_claim, proof, cta, objection
-- ad_assets(table): var_id, platform, field, text, char_limit
-- experiments(table): experiment_id, hypothesis, platform, audience, primary_kpi, success_criteria, start_date, end_date
-- kpis(table): metric_name, definition, formula, target
-- audiences(table): segment_name, definition, size_estimate
-- utm_conventions(table): source, medium, campaign_pattern, content_pattern
+PERSONA SNAPSHOT (schema_suggestions):
+- persona_core(table): age_range, life_stage, identity, income_bracket, short_description
+- persona_goals(table): primary_goal, secondary_goals, success_definition, emotional_drivers
+- persona_pains(table): pains, frustrations, previous_failures, fears
+- persona_objections(table): price_objection, trust_objection, effort_objection, fit_objection
+- persona_triggers(table): trigger_events, decision_criteria, info_sources, urgency_signals
+- persona_messaging(table): primary_promise, value_prop, tone_of_voice, words_to_use, words_to_avoid
+
+COLUMN FORMAT:
+- Return 4–6 rows per table.
+- Each row must be: field_key: natural sentence
+- field_key MUST be lower_snake_case.
+- After the first colon, write normal copy (no underscores), ≤80 chars, locale-safe (allow diacritics).
+- Examples:
+  age_range: 25–34, şehirli, dijitale alışkın
+  price_objection: "zaten çok ürün denedim, buna değer mi?"
+  tone_of_voice: sıcak, destekleyici, yargılamayan; abartıdan kaçın
 
 Return VALID JSON only. No markdown, no comments, no extra keys.
 TEXT,

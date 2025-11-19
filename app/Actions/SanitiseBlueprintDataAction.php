@@ -45,7 +45,7 @@ class SanitiseBlueprintDataAction
         $epics = is_array($data['epics'] ?? null) ? $data['epics'] : [];
 
         foreach ($epics as $epic) {
-            $title = $this->stripMarkdownFormatting(trim((string)($epic['title'] ?? '')));
+            $title = $this->stripMarkdownFormatting(trim((string) ($epic['title'] ?? '')));
             $originalTitleLength = mb_strlen($title);
             $title = $this->limitLen($title, $maxTitle);
             if ($originalTitleLength > $maxTitle) {
@@ -57,7 +57,7 @@ class SanitiseBlueprintDataAction
             $uniqueStories = [];
 
             foreach ($stories as $story) {
-                $content = $this->stripMarkdownFormatting(trim((string)($story['content'] ?? '')));
+                $content = $this->stripMarkdownFormatting(trim((string) ($story['content'] ?? '')));
                 $originalStoryLength = mb_strlen($content);
                 $content = $this->limitLen($content, $maxStory);
                 if ($originalStoryLength > $maxStory) {
@@ -156,10 +156,11 @@ class SanitiseBlueprintDataAction
 
         $schemaSuggestions = is_array($data['schema_suggestions'] ?? null) ? $data['schema_suggestions'] : [];
         $seenSchemas = [];
-        $columnPattern = '/^[a-z_][a-z0-9_]*(?:[:\s]+[a-z_][a-z0-9_]*(?:\s*\(\s*[a-z0-9_,\s]*\s*\))?)*$/i';
+        // Persona Snapshot: accept any non-empty single-line text for columns
+        $columnPattern = '/^.+$/u';
 
         foreach ($schemaSuggestions as $schema) {
-            $tableName = $this->stripMarkdownFormatting(trim((string)($schema['table_name'] ?? '')));
+            $tableName = $this->stripMarkdownFormatting(trim((string) ($schema['table_name'] ?? '')));
             $tableName = strtolower($tableName);
 
             if ($tableName === '') {
@@ -171,10 +172,8 @@ class SanitiseBlueprintDataAction
             $seenColumns = [];
 
             foreach ($columnsInput as $column) {
-                $columnText = $this->stripMarkdownFormatting(trim((string)$column));
+                $columnText = $this->stripMarkdownFormatting(trim((string) $column));
                 $columnText = preg_replace('/\s+/', ' ', $columnText) ?? $columnText;
-                $columnText = preg_replace('/\s*:\s*/', ' ', $columnText) ?? $columnText;
-                $columnText = strtolower($columnText);
                 $originalColumnLength = mb_strlen($columnText);
                 $columnText = $this->limitLen($columnText, $maxColumnToken);
                 if ($originalColumnLength > $maxColumnToken) {
@@ -257,3 +256,4 @@ class SanitiseBlueprintDataAction
         return mb_strlen($value) > $max ? mb_substr($value, 0, $max) : $value;
     }
 }
+

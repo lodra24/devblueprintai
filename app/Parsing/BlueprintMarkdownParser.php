@@ -98,7 +98,7 @@ class BlueprintMarkdownParser
         $stripped = preg_replace('/[*_`]+/', '', $line);
 
         return (bool) preg_match(
-            '/^#{2,}\s*(?:database|data\s*model|schema|measurement|kpi|analytics|tracking\s*plan)\s*(?:schema)?\s*(?:suggestions?|design|model|plan)?/i',
+            '/^#{2,}\s*(?:database|data\s*model|schema|measurement|kpi|analytics|tracking\s*plan|persona\s*snapshot|persona|audience)\s*(?:schema)?\s*(?:suggestions?|design|model|plan|overview|snapshot)?/i',
             $stripped ?? $line
         );
     }

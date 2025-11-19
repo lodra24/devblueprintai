@@ -54,9 +54,13 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
                     Insights
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold">
-                    Measurement & KPI Plan
+                                <h2 className="mt-2 font-display text-2xl font-semibold">
+                    Persona Anlık Görüntüsü
                 </h2>
+                <p className="mt-2 text-sm text-stone">
+                    Bu proje fikrine göre ideal hedef kitlenin kim olduğunu, ne istediğini ve
+                    hangi acı noktalarına konuşman gerektiğini 6 kutuda özetler.
+                </p>
             </header>
 
             {metricItems.length > 0 && (
@@ -104,32 +108,76 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
 
             {hasSchemas ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                    {schemas.map((schema) => (
-                        <article
-                            key={schema.table_name}
-                            className="rounded-2xl border border-stone/20 bg-white/95 p-4 shadow-sm"
-                        >
-                            <header className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold text-ink">
-                                    {schema.table_name}
-                                </h3>
-                                <span className="text-xs uppercase tracking-[0.3em] text-stone/70">
-                                    {schema.columns.length}{" "}
-                                    {schema.columns.length === 1 ? "column" : "columns"}
-                                </span>
-                            </header>
-                            <ul className="mt-4 space-y-2 text-sm text-stone">
-                                {schema.columns.map((column, index) => (
-                                    <li
-                                        key={`${schema.table_name}-${index}-${column}`}
-                                        className="rounded-2xl border border-stone/15 bg-frost/80 px-3 py-2"
-                                    >
-                                        {column}
-                                    </li>
-                                ))}
-                            </ul>
-                        </article>
-                    ))}
+                    {schemas.map((schema) => {
+                        // 1) Persona tablo başlıkları için insani map
+                        const PERSONA_TITLES: Record<string, string> = {
+                            persona_core: "Persona Özeti",
+                            persona_goals: "Hedefler & Motivasyonlar",
+                            persona_pains: "Acı Noktaları & Hayal Kırıklıkları",
+                            persona_objections: "İtirazlar & Bariyerler",
+                            persona_triggers: "Satın Alma Tetikleyicileri",
+                            persona_messaging: "Mesajlaşma & Ton Rehberi",
+                        };
+                        const humanize = (token: string) =>
+                            token
+                                .replace(/_/g, " ")
+                                .replace(/\s+/g, " ")
+                                .trim()
+                                .replace(/\b\w/g, (m) => m.toUpperCase());
+                        const tableTitle =
+                            PERSONA_TITLES[schema.table_name] ?? humanize(schema.table_name);
+
+                        // 2) "field_key: description" satırlarını ayrıştır
+                        const parseColumn = (raw: string) => {
+                            const i = raw.indexOf(":");
+                            if (i === -1) {
+                                return { label: "", text: raw.trim() };
+                            }
+                            const key = raw.slice(0, i).trim();
+                            const val = raw.slice(i + 1).trim();
+                            const label = humanize(key);
+                            return { label, text: val };
+                        };
+
+                        return (
+                            <article
+                                key={schema.table_name}
+                                className="rounded-2xl border border-stone/20 bg-white/95 p-4 shadow-sm"
+                            >
+                                <header className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold text-ink">
+                                        {tableTitle}
+                                    </h3>
+                                    <span className="text-xs uppercase tracking-[0.3em] text-stone/70">
+                                        {schema.columns.length}{" "}
+                                        {schema.columns.length === 1 ? "column" : "columns"}
+                                    </span>
+                                </header>
+                                <ul className="mt-4 space-y-2 text-sm text-stone">
+                                    {schema.columns.map((column, index) => {
+                                        const { label, text } = parseColumn(column ?? "");
+                                        return (
+                                            <li
+                                                key={`${schema.table_name}-${index}`}
+                                                className="rounded-2xl border border-stone/15 bg-frost/80 px-3 py-2"
+                                            >
+                                                {label ? (
+                                                    <>
+                                                        <span className="font-semibold text-ink/90">
+                                                            {label}
+                                                        </span>
+                                                        {text ? <span>: {text}</span> : null}
+                                                    </>
+                                                ) : (
+                                                    <>{text}</>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </article>
+                        );
+                    })}
                 </div>
             ) : (
                 <p className="text-sm text-stone">

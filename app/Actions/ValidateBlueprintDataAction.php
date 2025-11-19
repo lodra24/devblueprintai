@@ -38,18 +38,19 @@ class ValidateBlueprintDataAction
                 'required_with:schema_suggestions',
                 'string',
                 'max:' . $maxTitle,
-                'regex:/^[A-Za-z_][A-Za-z0-9_]*$/'
+                'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
             ],
             'schema_suggestions.*.columns' => ['required_with:schema_suggestions', 'array', 'min:1', 'max:' . $maxColumns],
             'schema_suggestions.*.columns.*' => [
                 'required_with:schema_suggestions.*.columns',
                 'string',
                 'max:' . $maxColumnToken,
-                // Column name plus optional type/qualifiers e.g. "name varchar", "id bigint:pk", "email varchar unique"
-                'regex:/^[a-z_][a-z0-9_]*(?:[:\s]+[a-z_][a-z0-9_]*(?:\s*\(\s*[a-z0-9_,\s]*\s*\))?)*$/i'
+                // Persona Snapshot: accept any non-empty single-line text
+                'regex:/^.+$/u',
             ],
         ]);
 
         return $validator->validate();
     }
 }
+

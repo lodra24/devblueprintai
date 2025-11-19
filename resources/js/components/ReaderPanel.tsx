@@ -193,7 +193,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                     </span>
                                 )}
                                 {story?.derived_fields?.meta?.angle_name && (
-                                    <span className="rounded-full border border-stone/20 bg-pastel-mint/80 px-2 py-0.5 font-medium text-ink/80">
+                                    <span className="rounded-full border border-accent/20 bg-pastel-lilac/80 px-2 py-0.5 text-[11px] font-medium text-accent/80">
                                         {story.derived_fields.meta.angle_name}
                                     </span>
                                 )}
