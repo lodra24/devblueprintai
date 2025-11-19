@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
+import confetti from "canvas-confetti";
 import { ProjectStatus } from "@/types";
+import { useSmoothProgress } from "@/hooks/useSmoothProgress";
 
 type BlueprintStatusBarProps = {
     status: ProjectStatus;
@@ -8,14 +10,7 @@ type BlueprintStatusBarProps = {
     message?: string | null;
     onRetry?: () => void;
     isRetrying?: boolean;
-};
-
-const clampProgress = (value: number | null | undefined): number => {
-    if (typeof value !== "number" || Number.isNaN(value)) {
-        return 0;
-    }
-
-    return Math.min(Math.max(value, 0), 100);
+    projectId?: string;
 };
 
 const toneStyles: Record<
@@ -50,12 +45,12 @@ const statusCopy: Record<
     },
     generating: {
         title: "Generating blueprint",
-        description: "AI is drafting the overall product scope.",
+        description: "AI is drafting the overall product scope...",
         tone: "info",
     },
     parsing: {
         title: "Structuring details",
-        description: "Organising epics and user stories from the AI output.",
+        description: "Organising epics and user stories from the AI output...",
         tone: "info",
     },
     ready: {
@@ -127,6 +122,30 @@ const RetryIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const SuccessIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M7.75 12L10.58 14.83L16.25 9.17"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
 const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
     status,
     progress,
@@ -134,7 +153,40 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
     message,
     onRetry,
     isRetrying = false,
+    projectId,
 }) => {
+    const showProgress = ["generating", "parsing", "ready"].includes(status);
+    const isReady = status === "ready";
+
+    const smoothProgress = useSmoothProgress(
+        progress,
+        showProgress,
+        projectId
+    );
+
+    useEffect(() => {
+        if (!isReady) {
+            return;
+        }
+
+        const count = 200;
+        const defaults = { origin: { y: 0.7 } };
+
+        const fire = (particleRatio: number, opts: Record<string, unknown>) => {
+            void confetti({
+                ...defaults,
+                ...opts,
+                particleCount: Math.floor(count * particleRatio),
+            });
+        };
+
+        fire(0.25, { spread: 26, startVelocity: 55 });
+        fire(0.2, { spread: 60 });
+        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+        fire(0.1, { spread: 120, startVelocity: 45 });
+    }, [isReady]);
+
     const baseCopy = statusCopy[status];
     const overrideCopy =
         stage && stageCopy[stage.toLowerCase()] ? stageCopy[stage.toLowerCase()] : undefined;
@@ -150,32 +202,64 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
     const tone = copy.tone;
     const styles = toneStyles[tone];
 
-    const showProgress = ["generating", "parsing"].includes(status);
-    const currentProgress = clampProgress(progress);
+    const displayPercent = isReady
+        ? 100
+        : Math.min(Math.floor(smoothProgress), 99);
+    const barWidth = isReady ? 100 : smoothProgress;
+
+    const containerClasses = isReady
+        ? "border-emerald-500/30 bg-emerald-50/50 shadow-emerald-100 scale-[1.01]"
+        : styles.container;
+
+    const accentClasses = isReady
+        ? "bg-gradient-to-r from-emerald-400 to-teal-400 shadow-[0_0_15px_rgba(52,211,153,0.6)]"
+        : styles.accent;
+
     const showRetryButton = status === "failed" && typeof onRetry === "function";
 
     return (
         <section
             role="status"
             aria-live="polite"
-            className={`surface-panel surface-panel--muted mt-6 px-5 py-6 transition-all duration-300 ${styles.container}`}
+            className={`surface-panel surface-panel--muted mt-6 px-5 py-6 transition-all duration-500 ${containerClasses}`}
         >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
-                        Blueprint status
+                    <p
+                        className={`text-xs font-semibold uppercase tracking-[0.3em] transition-colors ${
+                            isReady ? "text-emerald-600/80" : "text-stone/70"
+                        }`}
+                    >
+                        {isReady ? "COMPLETE" : "Blueprint status"}
                     </p>
                     <h2 className="font-display text-xl font-semibold text-ink">
-                        {copy.title}
+                        {isReady ? "Blueprint successfully created" : copy.title}
                     </h2>
                     <p className="text-sm text-stone">{copy.description}</p>
                 </div>
                 {(showProgress || showRetryButton) && (
                     <div className="flex items-center gap-3">
                         {showProgress && (
-                            <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-ink/80 shadow-sm">
-                                <span>Progress</span>
-                                <span>{currentProgress}%</span>
+                            <div
+                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition-all duration-500 ${
+                                    isReady
+                                        ? "bg-emerald-100 text-emerald-800"
+                                        : "bg-white/85 text-ink/80"
+                                }`}
+                            >
+                                {isReady ? (
+                                    <span className="flex items-center gap-2 animate-pop">
+                                        <SuccessIcon className="h-4 w-4" />
+                                        Done
+                                    </span>
+                                ) : (
+                                    <>
+                                        <span>Progress</span>
+                                        <span className="min-w-[3ch] text-right tabular-nums">
+                                            {displayPercent}%
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         )}
                         {showRetryButton && (
@@ -204,9 +288,18 @@ const BlueprintStatusBar: React.FC<BlueprintStatusBarProps> = ({
             {showProgress && (
                 <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-stone/20">
                     <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${styles.accent}`}
-                        style={{ width: `${currentProgress}%` }}
-                    />
+                        className={`relative h-full rounded-full ${accentClasses}`}
+                        style={{
+                            width: `${barWidth}%`,
+                            transition: "none",
+                        }}
+                    >
+                        {isReady && (
+                            <div className="absolute inset-0 h-full w-full animate-[shimmer_1.5s_infinite]">
+                                <div className="h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg]" />
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 

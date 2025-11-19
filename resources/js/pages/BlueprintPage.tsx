@@ -311,6 +311,7 @@ function BlueprintPage() {
                                 : undefined
                         }
                         isRetrying={isRetrying}
+                        projectId={project.id}
                     />
                 )}
 
