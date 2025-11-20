@@ -1,33 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Project, UserStory } from "@/types";
+import CompareTableView from "./compare/CompareTableView";
+import CompareStackView from "./compare/CompareStackView";
+import { SelectedStory } from "./compare/compareTypes";
 
 interface ComparePanelProps {
     project: Project;
 }
 
-type AssetKey =
-    | "hook"
-    | "google_h1"
-    | "google_desc"
-    | "meta_primary"
-    | "lp_h1"
-    | "email_subject"
-    | "cta";
-
-const ASSET_COLUMNS: Array<{ key: AssetKey; label: string }> = [
-    { key: "hook", label: "Hook" },
-    { key: "google_h1", label: "Google H1" },
-    { key: "google_desc", label: "Google Description" },
-    { key: "meta_primary", label: "Meta Primary" },
-    { key: "lp_h1", label: "Landing Page H1" },
-    { key: "email_subject", label: "Email Subject" },
-    { key: "cta", label: "CTA" },
-];
-
 type ViewMode = "table" | "stack";
 
 const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
-    const stories = useMemo(() => {
+    const stories: SelectedStory[] = useMemo(() => {
         return project.epics.flatMap((epic) =>
             epic.user_stories.map((story) => {
                 const defaultLabel = (() => {
@@ -103,6 +87,10 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
         );
     };
 
+    const removeSelectedStory = (storyId: string) => {
+        setSelectedStoryIds((prev) => prev.filter((id) => id !== storyId));
+    };
+
     const selectedStories = useMemo(() => {
         return stories.filter(({ story }) =>
             selectedStoryIds.includes(story.id)
@@ -133,212 +121,6 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
         return () => mql.removeEventListener("change", handleChange);
     }, []);
 
-    const renderTableView = () => (
-        <div className="relative">
-            <div className="h-scroll w-full relative z-[1] pb-2">
-                <table className="min-w-[1100px] border-separate border-spacing-y-3 text-sm text-ink">
-                    <thead>
-                        <tr>
-                            <th className="sticky left-0 z-10 rounded-l-xl bg-white px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-stone shadow-[1px_0_0_rgba(15,23,42,0.08)]">
-                                Variation
-                            </th>
-                            {ASSET_COLUMNS.map(({ key, label }) => (
-                                <th
-                                    key={key}
-                                    className="min-w-[240px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-stone/80"
-                                >
-                                    {label}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {selectedStories.map(({ story, varId }) => {
-                            const df = story.derived_fields;
-                            const limits = df?.limits ?? {};
-                            const counts = df?.char_counts ?? {};
-                            const overSet = new Set<string>(
-                                df?.over_limit_fields ?? []
-                            );
-
-                            return (
-                                <tr key={story.id}>
-                                    <th className="sticky left-0 z-10 rounded-l-xl bg-white px-4 py-4 text-left text-sm font-semibold text-ink shadow-[1px_0_0_rgba(15,23,42,0.08)]">
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span>{varId}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        toggleStorySelection(
-                                                            story.id
-                                                        )
-                                                    }
-                                                    className="text-xs font-semibold uppercase tracking-[0.2em] text-stone/70 hover:text-ink"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                            <div className="text-xs uppercase tracking-[0.2em] text-stone/60">
-                                                Priority: {story.priority}
-                                                {(story.derived_fields
-                                                    ?.over_limit_count ?? 0) > 0
-                                                    ? " - Over limit"
-                                                    : ""}
-                                            </div>
-                                        </div>
-                                    </th>
-                                    {ASSET_COLUMNS.map(({ key }) => {
-                                        const value = df?.assets?.[key] ?? "";
-                                        const limit = limits[key];
-                                        const count =
-                                            counts[key] ??
-                                            (typeof value === "string"
-                                                ? value.length
-                                                : 0);
-                                        const over = overSet.has(key);
-
-                                        return (
-                                            <td
-                                                key={key}
-                                                className={`align-top rounded-xl border px-4 py-4 text-sm leading-relaxed ${
-                                                    over
-                                                        ? "border-rose-200 bg-rose-50"
-                                                        : "border-stone/15 bg-white"
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-stone/70">
-                                                    <span>Content</span>
-                                                    {limit !== undefined && (
-                                                        <span
-                                                            className={
-                                                                over
-                                                                    ? "text-rose-600"
-                                                                    : "text-stone"
-                                                            }
-                                                        >
-                                                            {count}/{limit}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="mt-2 whitespace-pre-wrap text-ink">
-                                                    {value || (
-                                                        <span className="text-stone/60">
-                                                            -
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const renderStackView = () => (
-        <div className="space-y-4">
-            {selectedStories.map(({ story, varId }) => {
-                const df = story.derived_fields;
-                const overSet = new Set<string>(df?.over_limit_fields ?? []);
-                const limits = df?.limits ?? {};
-                const counts = df?.char_counts ?? {};
-
-                return (
-                    <article
-                        key={story.id}
-                        className="rounded-3xl border border-stone/20 bg-white p-5 text-sm shadow-sm"
-                    >
-                        <header className="flex flex-wrap items-center gap-3">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
-                                    Variation
-                                </p>
-                                <h3 className="font-display text-xl text-ink">
-                                    {varId}
-                                </h3>
-                            </div>
-                            <div className="ml-auto flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone/70">
-                                <span className="rounded-full border border-stone/30 px-3 py-1 text-ink/80">
-                                    Priority: {story.priority}
-                                </span>
-                                {(story.derived_fields?.over_limit_count ?? 0) >
-                                    0 && (
-                                    <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-rose-700">
-                                        Over limit
-                                    </span>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        toggleStorySelection(story.id)
-                                    }
-                                    className="rounded-full border border-stone/30 px-3 py-1 text-stone transition hover:border-rose-300 hover:text-rose-700"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        </header>
-
-                        <div className="mt-4 grid gap-3 md:grid-cols-2">
-                            {ASSET_COLUMNS.map(({ key, label }) => {
-                                const value = df?.assets?.[key] ?? "";
-                                const limit = limits[key];
-                                const count =
-                                    counts[key] ??
-                                    (typeof value === "string"
-                                        ? value.length
-                                        : 0);
-                                const over = overSet.has(key);
-
-                                return (
-                                    <div
-                                        key={key}
-                                        className={`rounded-2xl border px-4 py-3 transition ${
-                                            over
-                                                ? "border-rose-200 bg-rose-50"
-                                                : "border-stone/20 bg-white"
-                                        }`}
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone/70">
-                                                    {label}
-                                                </p>
-                                            </div>
-                                            {limit !== undefined && (
-                                                <span
-                                                    className={`text-xs font-semibold ${
-                                                        over
-                                                            ? "text-rose-600"
-                                                            : "text-stone"
-                                                    }`}
-                                                >
-                                                    {count}/{limit}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-ink">
-                                            {value || (
-                                                <span className="text-stone/60">
-                                                    -
-                                                </span>
-                                            )}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </article>
-                );
-            })}
-        </div>
-    );
-
     const renderComparisonView = () => {
         if (selectedStories.length < 2) {
             return (
@@ -349,7 +131,19 @@ const ComparePanel: React.FC<ComparePanelProps> = ({ project }) => {
         }
 
         const activeView = isDesktop ? viewMode : "stack";
-        return activeView === "table" ? renderTableView() : renderStackView();
+        return activeView === "table"
+            ? (
+                <CompareTableView
+                    selectedStories={selectedStories}
+                    onRemove={removeSelectedStory}
+                />
+            )
+            : (
+                <CompareStackView
+                    selectedStories={selectedStories}
+                    onRemove={removeSelectedStory}
+                />
+            );
     };
 
     return (

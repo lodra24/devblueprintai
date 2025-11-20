@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Actions\SanitiseBlueprintDataAction;
 use App\Actions\ValidateBlueprintDataAction;
-use App\Models\Epic;
+use App\Actions\Blueprint\SyncEpicsAction;
+use App\Actions\Blueprint\SyncSchemaSuggestionsAction;
 use App\Models\Project;
 use App\Parsing\BlueprintMarkdownParser;
-use App\Support\BlueprintKeyFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -18,7 +18,9 @@ class BlueprintPersistenceService
     public function __construct(
         protected ValidateBlueprintDataAction $validateBlueprintData,
         protected BlueprintMarkdownParser $parser,
-        protected SanitiseBlueprintDataAction $sanitiseBlueprintData
+        protected SanitiseBlueprintDataAction $sanitiseBlueprintData,
+        protected SyncEpicsAction $syncEpics,
+        protected SyncSchemaSuggestionsAction $syncSchemaSuggestions
     ) {}
 
     /**
@@ -80,107 +82,22 @@ class BlueprintPersistenceService
         ]);
 
         DB::transaction(function () use ($project, $validatedData, $rawMarkdown, $promptHash, $parseMode, $schemaDropped, $warningTotals, $telemetryEnabled) {
-            $existingEpics = $project->epics()
-                ->where('is_ai_generated', true)
-                ->with(['userStories' => function ($query) {
-                    $query->where('is_ai_generated', true)
-                        ->orderBy('position');
-                }])
-                ->get()
-                ->keyBy(fn (Epic $epic) => BlueprintKeyFactory::epic($epic->title));
+            ($this->syncEpics)(
+                $project,
+                $validatedData['epics'],
+                $promptHash
+            );
 
-            $retainedEpicIds = [];
-            $epicPosition = 100;
-            foreach ($validatedData['epics'] as $epicData) {
-                $epicKey = BlueprintKeyFactory::epic($epicData['title']);
-
-                /** @var \App\Models\Epic $epic */
-                $epic = $existingEpics[$epicKey] ?? $project->epics()->make();
-
-                $epic->fill([
-                    'title' => $epicData['title'],
-                    'position' => $epicPosition,
-                    'is_ai_generated' => true,
-                    'origin_prompt_hash' => $promptHash,
-                ]);
-                $epic->save();
-
-                $retainedEpicIds[] = $epic->id;
-                $epicPosition += 100;
-
-                $existingStories = $epic->userStories()
-                    ->where('is_ai_generated', true)
-                    ->get()
-                    ->keyBy(fn ($story) => BlueprintKeyFactory::story($story->content));
-
-                $retainedStoryIds = [];
-                $storyPosition = 100;
-                foreach ($epicData['stories'] as $storyData) {
-                    $storyKey = BlueprintKeyFactory::story($storyData['content']);
-                    $story = $existingStories[$storyKey] ?? $epic->userStories()->make();
-
-                    $story->fill([
-                        'content' => $storyData['content'],
-                        'priority' => $storyData['priority'] ?? ($story->priority ?? 'medium'),
-                        'position' => $storyPosition,
-                        'is_ai_generated' => true,
-                        'origin_prompt_hash' => $promptHash,
-                    ]);
-                    $story->save();
-
-                    $retainedStoryIds[] = $story->id;
-                    $storyPosition += 100;
-                }
-
-                $epic->userStories()
-                    ->where('is_ai_generated', true)
-                    ->whereNotIn('id', $retainedStoryIds)
-                    ->delete();
-            }
-
-            $project->epics()
-                ->where('is_ai_generated', true)
-                ->whereNotIn('id', $retainedEpicIds)
-                ->delete();
-
-            if ($telemetryEnabled) {
-                $project->schemaSuggestions()->updateOrCreate(
-                    [
-                        'prompt_hash' => $promptHash,
-                    ],
-                    [
-                        'prompt_hash' => $promptHash,
-                        'raw_markdown' => $rawMarkdown,
-                        'parsed' => [
-                            'schemas' => $validatedData['schema_suggestions'],
-                            'telemetry' => [
-                                'parse_mode' => $parseMode,
-                                'schema_dropped' => $schemaDropped,
-                                'warnings' => $warningTotals,
-                            ],
-                        ],
-                    ]
-                );
-            } else {
-                if (!empty($validatedData['schema_suggestions'])) {
-                    $project->schemaSuggestions()->updateOrCreate(
-                        [
-                            'prompt_hash' => $promptHash,
-                        ],
-                        [
-                            'prompt_hash' => $promptHash,
-                            'raw_markdown' => $rawMarkdown,
-                            'parsed' => [
-                                'schemas' => $validatedData['schema_suggestions'],
-                            ],
-                        ]
-                    );
-                } else {
-                    $project->schemaSuggestions()
-                        ->where('prompt_hash', $promptHash)
-                        ->delete();
-                }
-            }
+            ($this->syncSchemaSuggestions)(
+                $project,
+                $validatedData['schema_suggestions'],
+                $promptHash,
+                $telemetryEnabled,
+                $rawMarkdown,
+                $parseMode,
+                $schemaDropped,
+                $warningTotals
+            );
         });
     }
 
