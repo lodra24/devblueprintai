@@ -11,6 +11,8 @@ interface ReaderPanelProps {
     story: UserStory | null;
     isOpen: boolean;
     onClose: () => void;
+    onDownloadCsv?: () => void;
+    isDownloading?: boolean;
 }
 
 type AssetKey = keyof DerivedFields["assets"];
@@ -39,6 +41,8 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
     story,
     isOpen,
     onClose,
+    onDownloadCsv,
+    isDownloading,
 }) => {
     const derived = story?.derived_fields;
     const overLimitSet = useMemo(
@@ -165,6 +169,30 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
 
     const limits = derived?.limits ?? {};
     const charCounts = derived?.char_counts ?? {};
+
+    const footer = (
+        <div className="mt-auto border-t border-stone/20 bg-stone-50/50 p-6">
+            <div className="flex flex-wrap justify-end gap-3">
+                {derived && (
+                    <ActionButton
+                        label={copiedKey === "ALL" ? "Copied!" : "Copy Details"}
+                        onClick={handleCopyAll}
+                        icon="copy"
+                        variant="secondary"
+                    />
+                )}
+                {onDownloadCsv && (
+                    <ActionButton
+                        label={isDownloading ? "Exporting..." : "Download CSV"}
+                        onClick={onDownloadCsv}
+                        icon={isDownloading ? "spinner" : "download"}
+                        variant="primary"
+                        disabled={isDownloading}
+                    />
+                )}
+            </div>
+        </div>
+    );
 
     return (
         <div
@@ -322,29 +350,6 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-3 border-t border-stone/20 pt-6">
-                                    <ActionButton
-                                        label={
-                                            copiedKey === "ALL"
-                                                ? "Copied!"
-                                                : "Copy All"
-                                        }
-                                        onClick={handleCopyAll}
-                                        icon="copy"
-                                    />
-                                    <ActionButton
-                                        label="Open in Compare"
-                                        onClick={() => {}}
-                                        icon="compare"
-                                        variant="secondary"
-                                    />
-                                    <ActionButton
-                                        label="Jump to Column"
-                                        onClick={() => {}}
-                                        icon="column"
-                                        variant="secondary"
-                                    />
-                                </div>
                             </div>
                         ) : (
                             <div className="rounded-2xl border border-stone/20 bg-frost px-4 py-6 text-sm text-stone">
@@ -352,6 +357,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                             </div>
                         )}
                     </div>
+                    {footer}
                 </div>
             </aside>
         </div>
@@ -563,8 +569,9 @@ const CopyButton: React.FC<CopyButtonProps> = ({
 interface ActionButtonProps {
     label: string;
     onClick: () => void;
-    icon: "copy" | "compare" | "column";
+    icon: "copy" | "compare" | "column" | "download" | "spinner";
     variant?: "primary" | "secondary";
+    disabled?: boolean;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
@@ -572,12 +579,16 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     onClick,
     icon,
     variant = "primary",
+    disabled = false,
 }) => (
     <button
         type="button"
         onClick={onClick}
+        disabled={disabled}
         className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-            variant === "primary"
+            disabled
+                ? "cursor-not-allowed border-transparent bg-stone/20 text-stone/60"
+                : variant === "primary"
                 ? "bg-ink text-white hover:opacity-90"
                 : "border border-stone/20 bg-white text-stone hover:border-accent/30"
         }`}
@@ -587,9 +598,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     </button>
 );
 
-const ActionIcon: React.FC<{ name: ActionButtonProps["icon"] }> = ({
-    name,
-}) => {
+const ActionIcon: React.FC<{ name: ActionButtonProps["icon"] }> = ({ name }) => {
     switch (name) {
         case "copy":
             return (
@@ -627,6 +636,47 @@ const ActionIcon: React.FC<{ name: ActionButtonProps["icon"] }> = ({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     />
+                </svg>
+            );
+        case "download":
+            return (
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+            );
+        case "spinner":
+            return (
+                <svg
+                    className="animate-spin"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                    ></circle>
+                    <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                 </svg>
             );
         case "column":

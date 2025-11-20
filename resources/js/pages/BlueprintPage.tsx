@@ -15,6 +15,8 @@ import ComparePanel from "@/components/ComparePanel";
 import BoardFilterBar from "@/components/BoardFilterBar";
 import { BoardDensity, BoardFilters, BoardSortOption } from "@/types";
 import { UserStory } from "@/types";
+import { useToast } from "@/contexts/ToastContext";
+import { downloadCsvFile, generateProjectCsv } from "@/lib/csvExporter";
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
@@ -39,11 +41,13 @@ function BlueprintPage() {
     });
     const [sortBy, setSortBy] = useState<BoardSortOption>("priority");
     const [density, setDensity] = useState<BoardDensity>("comfortable");
+    const [isDownloading, setIsDownloading] = useState(false);
     const showStatusBar = useBlueprintStatusBarVisibility(
         project?.id,
         project?.status
     );
     const { retry: retryBlueprint, isRetrying } = useRetryBlueprint(project?.id);
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (location.state?.claimed) {
@@ -85,6 +89,34 @@ function BlueprintPage() {
 
     const handleCardSelect = (story: UserStory) => {
         setSelectedStoryId(story.id);
+    };
+
+    const handleDownloadAllCsv = async () => {
+        if (!project) {
+            return;
+        }
+
+        try {
+            setIsDownloading(true);
+            const csvContent = await generateProjectCsv(project, ",");
+
+            const now = new Date();
+            const timestamp = now.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+
+            let safeName = project.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+            if (!safeName) {
+                safeName = project.id || "blueprint_export";
+            }
+            const filename = `${safeName.slice(0, 50)}_${timestamp}.csv`;
+
+            downloadCsvFile(csvContent, filename);
+            showToast({ type: "success", message: "CSV exported." });
+        } catch (error) {
+            console.error("CSV export failed:", error);
+            showToast({ type: "error", message: "Failed to export CSV." });
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     const availableAngles = useMemo(() => {
@@ -370,6 +402,8 @@ function BlueprintPage() {
                 story={selectedStory}
                 isOpen={!!selectedStoryId}
                 onClose={() => setSelectedStoryId(null)}
+                onDownloadCsv={handleDownloadAllCsv}
+                isDownloading={isDownloading}
             />
 
             {showAuthCallToAction && <AuthCallToAction />}
