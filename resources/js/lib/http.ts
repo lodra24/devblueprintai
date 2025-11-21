@@ -1,10 +1,9 @@
 import axios from "axios";
 
 /**
- * API istekleri için yapılandırılmış Axios instance'ı.
- * - baseURL: Tüm isteklerin başına '/api' ekler.
- * - withCredentials: Sanctum'un cookie tabanlı kimlik doğrulaması için gereklidir.
- *                    Cross-origin (farklı domain/port) isteklerde tarayıcının cookie göndermesini sağlar.
+ * Preconfigured Axios instance for API requests.
+ * - baseURL: prefixes all requests with '/api'.
+ * - withCredentials: required for Sanctum cookie-based auth; sends cookies on cross-origin requests.
  */
 export const http = axios.create({
     baseURL: "/api",
@@ -15,11 +14,10 @@ export const http = axios.create({
 });
 
 /**
- * State değiştiren (POST, PUT, PATCH, DELETE) bir istek göndermeden önce
- * Sanctum'dan CSRF cookie'sini aldığımızdan emin olur.
+ * Ensure we have the CSRF cookie from Sanctum before sending any state-changing request.
  */
 export const ensureCsrf = () => {
-    // Bu istek için baseURL'i geçersiz kılıyoruz çünkü CSRF endpoint'i '/api' altında değil, kök dizinde.
+    // Override baseURL because the CSRF endpoint lives at the root, not under /api.
     return http.get("/sanctum/csrf-cookie", {
         baseURL: "/",
     });

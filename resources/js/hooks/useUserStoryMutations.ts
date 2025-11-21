@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { produce } from "immer";
 import { qk } from "@/lib/queryKeys";
 import { Project, UserStory, Epic } from "@/types";
 import { http, ensureCsrf } from "@/lib/http";
-import { produce } from "immer";
+import { useToast } from "@/contexts/ToastContext";
 
-// --- API Fonksiyonları ---
+// --- API functions ---
 
 const createUserStory = async (payload: {
     epicId: string;
@@ -44,8 +46,20 @@ type ReorderPayload = {
 
 const reorderUserStory = async (payload: ReorderPayload): Promise<void> => {
     await ensureCsrf();
-    const { projectId, ...data } = payload; // projectId frontend'e özel, API'ye gönderme
+    const { projectId, ...data } = payload; // projectId is frontend-only
     await http.post("/user-stories/reorder", data);
+};
+
+const generateEpicAiStory = async (payload: {
+    epicId: string;
+}): Promise<UserStory> => {
+    await ensureCsrf();
+    const response = await http.post(
+        `/epics/${payload.epicId}/generate-story`,
+        {},
+        { timeout: 120000 }
+    );
+    return response.data.data;
 };
 
 const POSITION_STEP = 100;
@@ -264,10 +278,8 @@ export const useReorderUserStory = () => {
 
                 targetEpic.user_stories.splice(insertionIndex, 0, movedStory);
 
-                // Hedef epikte deterministik reindex uygula
                 optimisticReindexEpic(targetEpic);
 
-                // Kaynak ve hedef farklıysa kaynak epik için de reindex uygula
                 if (sourceLocation.epic.id !== targetEpic.id) {
                     optimisticReindexEpic(sourceLocation.epic);
                 }
@@ -290,6 +302,47 @@ export const useReorderUserStory = () => {
                     queryKey: context.projectQueryKey,
                 });
             }
+        },
+    });
+};
+
+export const useGenerateAiUserStory = (projectId: string) => {
+    const queryClient = useQueryClient();
+    const projectQueryKey = qk.project(projectId);
+    const { showToast } = useToast();
+
+    return useMutation({
+        mutationFn: generateEpicAiStory,
+        onSuccess: (newStory, variables) => {
+            const previousProject =
+                queryClient.getQueryData<Project>(projectQueryKey);
+
+            if (previousProject && variables?.epicId) {
+                const optimisticProject = produce(previousProject, (draft) => {
+                    const targetEpic = draft.epics.find(
+                        (e) => e.id === variables.epicId
+                    );
+                    if (targetEpic) {
+                        targetEpic.user_stories.push(newStory);
+                    }
+                });
+
+                queryClient.setQueryData(projectQueryKey, optimisticProject);
+            }
+
+            void queryClient.invalidateQueries({ queryKey: projectQueryKey });
+        },
+        onError: (error) => {
+            let message = "Failed to generate a new story.";
+
+            if (error instanceof AxiosError) {
+                const responseMessage = error.response?.data?.message;
+                if (typeof responseMessage === "string") {
+                    message = responseMessage;
+                }
+            }
+
+            showToast({ type: "error", message });
         },
     });
 };

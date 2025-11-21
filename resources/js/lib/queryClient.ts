@@ -1,47 +1,47 @@
 import { QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
-// Sadece 5xx sunucu hataları veya network hataları için yeniden deneme yap.
-// 4xx istemci hatalarında (örn: 404 Not Found, 403 Forbidden) yeniden deneme yapma,
-// çünkü bu hataların tekrar denemeyle düzelme ihtimali düşüktür.
+// Only retry on 5xx server errors or network issues.
+// Do not retry on 4xx client errors (e.g., 404 Not Found, 403 Forbidden);
+// these are unlikely to succeed on retry.
 const retry = (failureCount: number, error: unknown): boolean => {
-    // 3 denemeden sonra vazgeç
+    // Give up after 3 attempts
     if (failureCount >= 3) {
         return false;
     }
 
     if (error instanceof AxiosError) {
-        // Network hatası (sunucuya ulaşılamadı)
+        // Network error (server unreachable)
         if (!error.response) {
             return true;
         }
 
-        // 5xx sunucu hatalarında yeniden dene
+        // Retry on 5xx server errors
         if (error.response.status >= 500 && error.response.status <= 599) {
             return true;
         }
     }
 
-    // Diğer tüm durumlarda (4xx hataları dahil) yeniden deneme
+    // In all other cases (including 4xx) do not retry
     return false;
 };
 
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Verinin "bayat" (stale) olarak kabul edileceği süre.
-            // Bu süre dolana kadar veri önbellekten okunur, ağ isteği yapılmaz.
-            staleTime: 30 * 1000, // 30 saniye
+            // How long data is considered "stale".
+            // Until then, data is served from cache without network calls.
+            staleTime: 30 * 1000, // 30 seconds
 
-            // Verinin kullanılmadığında (inactive) ne kadar süre önbellekte tutulacağı.
+            // How long inactive data stays cached.
             // Garbage Collection Time.
-            gcTime: 5 * 60 * 1000, // 5 dakika
+            gcTime: 5 * 60 * 1000, // 5 minutes
 
-            // Hata durumunda yeniden deneme mantığı
+            // Retry logic on error
             retry,
 
-            // Kullanıcı pencereye tekrar odaklandığında veriyi yeniden çekme ayarı.
-            // Geliştirme ortamında sürekli veri çekmesini önlemek için kapalı, production'da açık.
+            // Refetch when the user refocuses the window.
+            // Disabled in development to avoid constant refetch; enabled in production.
             refetchOnWindowFocus: process.env.NODE_ENV === "production",
         },
     },

@@ -33,14 +33,25 @@ class AiGenerationService
     public function generate(Project $project): string
     {
         $prompt = $this->makePrompt($project);
+        return $this->generateWithPrompt($project, $prompt, 'blueprint');
+    }
+
+    /**
+     * Generate content with a custom prompt.
+     */
+    public function generateWithPrompt(Project $project, string $prompt, string $purpose = 'custom', bool $useCache = true): string
+    {
         $promptHash = $this->calculatePromptHash($project, $prompt);
 
-        $existingRun = $project->aiRuns()
-            ->where('prompt_hash', $promptHash)
-            ->where('status', 'success')
-            ->where('provider', $this->provider->providerName())
-            ->where('model', $this->provider->getModel())
-            ->first();
+        $existingRun = null;
+        if ($useCache) {
+            $existingRun = $project->aiRuns()
+                ->where('prompt_hash', $promptHash)
+                ->where('status', 'success')
+                ->where('provider', $this->provider->providerName())
+                ->where('model', $this->provider->getModel())
+                ->first();
+        }
 
         if ($existingRun && !empty($existingRun->raw_markdown)) {
             Log::info("Using cached successful AI run for project {$project->id}");

@@ -9,7 +9,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-// Artık Request ve Rule'a burada ihtiyacımız yok.
+// Request and Rule are no longer needed here.
 
 class ClaimProjectController extends Controller
 {

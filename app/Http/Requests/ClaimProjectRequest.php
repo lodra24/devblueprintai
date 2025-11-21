@@ -11,7 +11,7 @@ class ClaimProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Yetkilendirme policy sınıfı tarafından yapılacağı için true kalmalı.
+        // Keep true because authorization is handled by the policy class.
         return true;
     }
 
@@ -26,7 +26,7 @@ class ClaimProjectRequest extends FormRequest
             'project_id' => [
                 'required',
                 'uuid',
-                'exists:projects,id', // Sadece projenin veritabanında var olup olmadığını kontrol et
+                'exists:projects,id', // Only checks that the project exists in the database
             ],
         ];
     }

@@ -185,6 +185,7 @@ const Board: React.FC<BoardProps> = ({
                 {epicsToRender.map((epic) => (
                     <Column
                         key={epic.id}
+                        projectId={project.id}
                         epic={epic}
                         onCardSelect={onCardSelect}
                         density={density}

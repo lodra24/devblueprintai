@@ -20,12 +20,12 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                // API isteği ise JSON yanıtı dön, değilse yönlendir.
-                // Not: 200 OK yerine 400 Bad Request veya 409 Conflict daha anlamlı olabilir, 
-                // ancak Breeze'in varsayılanı genelde 200'dür.
+                // If the request expects JSON, return JSON; otherwise redirect.
+                // Note: 400 Bad Request or 409 Conflict may be more appropriate than 200 OK,
+                // but Breeze defaults to 200.
                 return $request->expectsJson()
-                            ? response()->json(['message' => 'Already authenticated.'], Response::HTTP_OK) 
-                            : redirect('/dashboard'); // Web istekleri için fallback
+                    ? response()->json(['message' => 'Already authenticated.'], Response::HTTP_OK)
+                    : redirect('/dashboard'); // Fallback for web requests
             }
         }
 

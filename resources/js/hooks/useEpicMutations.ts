@@ -4,7 +4,7 @@ import { Project, Epic, UserStory } from "@/types";
 import { http, ensureCsrf } from "@/lib/http";
 import { produce } from "immer";
 
-// --- API Fonksiyonları ---
+// --- API functions ---
 
 const createEpic = async (payload: {
     projectId: string;

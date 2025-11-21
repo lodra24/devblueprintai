@@ -8,12 +8,12 @@
     <!-- Fonts: Sora + Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Vite ile CSS ve JS dosyalarını dahil et -->
+    <!-- Include CSS and JS from Vite -->
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
 </head>
 <body class="antialiased bg-frost text-ink font-body">
-    {{-- React uygulamasının bağlanacağı kök element --}}
+    {{-- Root element where the React app will mount --}}
     <div id="app"></div>
 </body>
 </html>

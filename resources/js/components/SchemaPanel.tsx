@@ -54,12 +54,12 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone/70">
                     Insights
                 </p>
-                                <h2 className="mt-2 font-display text-2xl font-semibold">
-                    Persona Anlık Görüntüsü
+                <h2 className="mt-2 font-display text-2xl font-semibold">
+                    Persona Snapshot
                 </h2>
                 <p className="mt-2 text-sm text-stone">
-                    Bu proje fikrine göre ideal hedef kitlenin kim olduğunu, ne istediğini ve
-                    hangi acı noktalarına konuşman gerektiğini 6 kutuda özetler.
+                    A concise view of the target audience for this project: who they are, what
+                    they want, and which pains to address across six quick blocks.
                 </p>
             </header>
 
@@ -109,14 +109,14 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
             {hasSchemas ? (
                 <div className="grid gap-4 md:grid-cols-2">
                     {schemas.map((schema) => {
-                        // 1) Persona tablo başlıkları için insani map
+                        // 1) Human-friendly titles for persona tables
                         const PERSONA_TITLES: Record<string, string> = {
-                            persona_core: "Persona Özeti",
-                            persona_goals: "Hedefler & Motivasyonlar",
-                            persona_pains: "Acı Noktaları & Hayal Kırıklıkları",
-                            persona_objections: "İtirazlar & Bariyerler",
-                            persona_triggers: "Satın Alma Tetikleyicileri",
-                            persona_messaging: "Mesajlaşma & Ton Rehberi",
+                            persona_core: "Persona Overview",
+                            persona_goals: "Goals & Motivations",
+                            persona_pains: "Pains & Frustrations",
+                            persona_objections: "Objections & Barriers",
+                            persona_triggers: "Purchase Triggers",
+                            persona_messaging: "Messaging & Tone",
                         };
                         const humanize = (token: string) =>
                             token
@@ -127,7 +127,7 @@ const SchemaPanel: React.FC<SchemaPanelProps> = ({ project }) => {
                         const tableTitle =
                             PERSONA_TITLES[schema.table_name] ?? humanize(schema.table_name);
 
-                        // 2) "field_key: description" satırlarını ayrıştır
+                        // 2) Parse "field_key: description" rows
                         const parseColumn = (raw: string) => {
                             const i = raw.indexOf(":");
                             if (i === -1) {

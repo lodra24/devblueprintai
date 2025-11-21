@@ -1,6 +1,6 @@
 import { http, ensureCsrf } from "./lib/http";
 import { AxiosError } from "axios";
-import { Paginated, Project, ProjectSummary } from "./types";
+import { Paginated, Project, ProjectSummary, UserStory } from "./types";
 
 type ResourceResponse<T> = {
     data: T;
@@ -111,4 +111,15 @@ export const logout = async () => {
     await ensureCsrf();
     const response = await http.post("/logout");
     return response.data;
+};
+
+export const generateStoryForEpic = async (
+    epicId: string
+): Promise<UserStory> => {
+    await ensureCsrf();
+    const response = await http.post<ResourceResponse<UserStory>>(
+        `/epics/${epicId}/generate-story`
+    );
+
+    return unwrapResource(response.data);
 };

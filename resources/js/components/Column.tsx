@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -7,17 +7,41 @@ import {
 import { Epic, UserStory } from "@/types";
 import Card from "./Card";
 import { BoardDensity } from "@/types";
+import { useGenerateAiUserStory } from "@/hooks/useUserStoryMutations";
 
 interface ColumnProps {
+    projectId: string;
     epic: Epic;
     onCardSelect?: (story: UserStory) => void;
     density?: BoardDensity;
 }
 
-const Column: React.FC<ColumnProps> = ({ epic, onCardSelect, density = "comfortable" }) => {
+const Column: React.FC<ColumnProps> = ({
+    projectId,
+    epic,
+    onCardSelect,
+    density = "comfortable",
+}) => {
     const { setNodeRef } = useDroppable({
         id: epic.id,
     });
+    const listRef = useRef<HTMLDivElement | null>(null);
+    const previousCountRef = useRef<number>(epic.user_stories.length);
+    const generateStoryMutation = useGenerateAiUserStory(projectId);
+
+    useEffect(() => {
+        if (epic.user_stories.length > previousCountRef.current) {
+            const lastChild = listRef.current?.lastElementChild;
+            if (lastChild) {
+                lastChild.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+        }
+        previousCountRef.current = epic.user_stories.length;
+    }, [epic.user_stories.length]);
+
+    const handleGenerateClick = () => {
+        generateStoryMutation.mutate({ epicId: epic.id });
+    };
 
     return (
         <div
@@ -42,6 +66,7 @@ const Column: React.FC<ColumnProps> = ({ epic, onCardSelect, density = "comforta
                 strategy={verticalListSortingStrategy}
             >
                 <div
+                    ref={listRef}
                     className={
                         density === "compact"
                             ? "space-y-2"
@@ -61,6 +86,17 @@ const Column: React.FC<ColumnProps> = ({ epic, onCardSelect, density = "comforta
                     ))}
                 </div>
             </SortableContext>
+
+            {epic.user_stories.length < 5 && (
+                <button
+                    type="button"
+                    onClick={handleGenerateClick}
+                    disabled={generateStoryMutation.isPending}
+                    className="mt-2 inline-flex items-center justify-center rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {generateStoryMutation.isPending ? "Generating..." : "Generate another"}
+                </button>
+            )}
         </div>
     );
 };
