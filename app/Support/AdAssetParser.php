@@ -92,10 +92,7 @@ class AdAssetParser
             ];
         }
 
-        $segments = array_filter(
-            array_map('trim', explode('|', $content)),
-            static fn (string $segment) => $segment !== ''
-        );
+        $segments = $this->splitSegments($content);
 
         foreach ($segments as $segment) {
             $parsed = $this->parseSegment($segment);
@@ -188,6 +185,7 @@ class AdAssetParser
         if ($value !== '') {
             $value = $this->stripWrappingQuotes($value);
             $value = trim($value);
+            $value = $this->unescapeValue($value);
         }
 
         return [
@@ -226,5 +224,64 @@ class AdAssetParser
     private function isReasoningKey(string $key): bool
     {
         return in_array($key, self::REASONING_KEYS, true);
+    }
+
+    /**
+     * Split content by unescaped pipe characters.
+     *
+     * @return string[]
+     */
+    private function splitSegments(string $content): array
+    {
+        $segments = [];
+        $buffer = '';
+        $escaping = false;
+        $length = strlen($content);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $content[$i];
+
+            if ($escaping) {
+                $buffer .= '\\' . $char;
+                $escaping = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escaping = true;
+                continue;
+            }
+
+            if ($char === '|') {
+                $trimmed = trim($buffer);
+                if ($trimmed !== '') {
+                    $segments[] = $trimmed;
+                }
+                $buffer = '';
+                continue;
+            }
+
+            $buffer .= $char;
+        }
+
+        if ($escaping) {
+            $buffer .= '\\';
+        }
+
+        $trimmed = trim($buffer);
+        if ($trimmed !== '') {
+            $segments[] = $trimmed;
+        }
+
+        return $segments;
+    }
+
+    private function unescapeValue(string $value): string
+    {
+        // Unescape pipe first, then collapse escaped backslashes.
+        $value = str_replace(['\\|'], ['|'], $value);
+        $value = str_replace('\\\\', '\\', $value);
+
+        return $value;
     }
 }

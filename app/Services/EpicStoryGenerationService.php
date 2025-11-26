@@ -42,6 +42,7 @@ class EpicStoryGenerationService
         /** @var UserStory $userStory */
         $userStory = $epic->userStories()->create([
             'content' => $content,
+            'original_content' => $content,
             'priority' => $storyData['priority'] ?? 'medium',
             'position' => $position,
             'is_ai_generated' => true,

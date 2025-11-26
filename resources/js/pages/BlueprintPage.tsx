@@ -237,11 +237,13 @@ function BlueprintPage() {
             </div>
 
             <ReaderPanel
+                key={selectedStoryId ?? "empty"}
                 story={selectedStory}
                 isOpen={!!selectedStoryId}
                 onClose={() => setSelectedStoryId(null)}
                 onDownloadCsv={handleDownloadAllCsv}
                 isDownloading={isDownloading}
+                projectId={(project?.id ?? projectId) as string}
             />
 
             {showAuthCallToAction && <AuthCallToAction />}

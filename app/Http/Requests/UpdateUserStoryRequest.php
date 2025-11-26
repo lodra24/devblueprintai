@@ -28,7 +28,15 @@ class UpdateUserStoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content' => ['sometimes', 'required', 'string', 'max:1000'],
+            'content' => ['sometimes', 'required_without_all:meta,assets,reasoning', 'string', 'max:5000'],
+            'meta' => ['sometimes', 'array'],
+            'meta.*' => ['nullable', 'string'],
+            'assets' => ['sometimes', 'array'],
+            'assets.*' => ['nullable', 'string'],
+            'reasoning' => ['sometimes', 'array'],
+            'reasoning.*' => ['nullable', 'string'],
+            'limits' => ['sometimes', 'array'],
+            'limits.*' => ['nullable', 'integer'],
             'priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high'])],
         ];
     }

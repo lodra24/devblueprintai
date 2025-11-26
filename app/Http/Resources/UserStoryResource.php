@@ -23,16 +23,21 @@ class UserStoryResource extends JsonResource
         }
 
         $derived = $parser->parse($this->content ?? '', $angleFromEpic);
+        $originalDerived = $this->original_content
+            ? $parser->parse($this->original_content, $angleFromEpic)
+            : null;
 
         return [
             'id' => $this->id,
             'content' => $this->content,
+            'original_content' => $this->original_content,
             'priority' => $this->priority,
             'position' => $this->position,
             'is_ai_generated' => $this->is_ai_generated,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'derived_fields' => $derived,
+            'original_derived_fields' => $originalDerived,
         ];
     }
 }

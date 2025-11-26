@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\GenerateEpicStoryController;
 use App\Http\Controllers\Api\EpicController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ReorderUserStoryController;
+use App\Http\Controllers\Api\RestoreUserStoryController;
 use App\Http\Controllers\Api\UserStoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -38,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('epics', EpicController::class)->only(['store', 'update', 'destroy']);
     Route::apiResource('user-stories', UserStoryController::class)->only(['store', 'update', 'destroy']);
     Route::post('/user-stories/reorder', ReorderUserStoryController::class)->name('user-stories.reorder');
+    Route::post('/user-stories/{userStory}/restore', RestoreUserStoryController::class)
+        ->name('user-stories.restore');
     Route::get('/my-projects', [ProjectController::class, 'myProjects'])->name('projects.my');
     Route::post('/epics/{epic}/generate-story', [GenerateEpicStoryController::class, '__invoke'])
         ->name('epics.generate-story');

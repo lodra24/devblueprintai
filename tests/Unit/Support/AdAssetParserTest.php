@@ -153,4 +153,15 @@ class AdAssetParserTest extends TestCase
 
         $this->assertSame('İçerikten Gelen', $result['meta']['angle_name']);
     }
+    public function test_it_handles_escaped_pipe_in_values(): void
+    {
+        $parser = new AdAssetParser();
+
+        $content = 'Hook:"Fiyat \\| Performans ürünü" | CTA:"Şimdi \\| Hemen"';
+
+        $result = $parser->parse($content);
+
+        $this->assertSame('Fiyat | Performans ürünü', $result['assets']['hook']);
+        $this->assertSame('Şimdi | Hemen', $result['assets']['cta']);
+    }
 }

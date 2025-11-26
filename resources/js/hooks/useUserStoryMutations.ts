@@ -24,6 +24,10 @@ const updateUserStory = async (payload: {
     storyId: string;
     content?: string;
     priority?: UserStory["priority"];
+    assets?: Partial<NonNullable<UserStory["derived_fields"]>["assets"]>;
+    reasoning?: Partial<NonNullable<UserStory["derived_fields"]>["reasoning"]>;
+    meta?: Partial<NonNullable<UserStory["derived_fields"]>["meta"]>;
+    limits?: Record<string, number>;
 }): Promise<UserStory> => {
     await ensureCsrf();
     const { storyId, ...data } = payload;
@@ -59,6 +63,12 @@ const generateEpicAiStory = async (payload: {
         {},
         { timeout: 120000 }
     );
+    return response.data.data;
+};
+
+const restoreUserStory = async (payload: { storyId: string }): Promise<UserStory> => {
+    await ensureCsrf();
+    const response = await http.post(`/user-stories/${payload.storyId}/restore`);
     return response.data.data;
 };
 
@@ -136,9 +146,51 @@ export const useCreateUserStory = (projectId: string) => {
     });
 };
 
+export const useRestoreUserStory = (projectId: string) => {
+    const queryClient = useQueryClient();
+    const projectQueryKey = qk.project(projectId);
+
+    return useMutation({
+        mutationFn: restoreUserStory,
+        onMutate: async (payload) => {
+            await queryClient.cancelQueries({ queryKey: projectQueryKey });
+            const previousProject =
+                queryClient.getQueryData<Project>(projectQueryKey);
+
+            return { previousProject };
+        },
+        onError: (_err, _payload, context) => {
+            context?.previousProject &&
+                queryClient.setQueryData(
+                    projectQueryKey,
+                    context.previousProject
+                );
+        },
+        onSuccess: (updatedStory) => {
+            const previousProject =
+                queryClient.getQueryData<Project>(projectQueryKey);
+
+            if (!previousProject) return;
+
+            const nextProject = produce(previousProject, (draft) => {
+                const found = findStoryAndEpic(draft, updatedStory.id);
+                if (found) {
+                    Object.assign(found.story, updatedStory);
+                }
+            });
+
+            queryClient.setQueryData(projectQueryKey, nextProject);
+        },
+        onSettled: () => {
+            void queryClient.invalidateQueries({ queryKey: projectQueryKey });
+        },
+    });
+};
+
 export const useUpdateUserStory = (projectId: string) => {
     const queryClient = useQueryClient();
     const projectQueryKey = qk.project(projectId);
+    const { showToast } = useToast();
 
     return useMutation({
         mutationFn: updateUserStory,
@@ -153,28 +205,87 @@ export const useUpdateUserStory = (projectId: string) => {
                 const storyLocation = findStoryAndEpic(draft, payload.storyId);
                 if (storyLocation) {
                     const { storyId, ...rest } = payload;
-                    const definedUpdates = Object.fromEntries(
-                        Object.entries(rest).filter(
-                            ([, value]) => value !== undefined
-                        )
-                    ) as Partial<UserStory>;
+                    const { assets, reasoning, meta, limits, ...baseUpdates } = rest;
 
                     Object.assign(storyLocation.story, {
-                        ...definedUpdates,
+                        ...baseUpdates,
                         is_ai_generated: false,
                     });
+
+                    const df = storyLocation.story.derived_fields ?? {
+                        meta: {},
+                        assets: {},
+                        reasoning: {},
+                        limits: {},
+                        char_counts: {},
+                        over_limit_fields: [],
+                        over_limit_count: 0,
+                    };
+
+                    if (assets) {
+                        df.assets = { ...df.assets, ...assets };
+                        df.char_counts = {
+                            ...df.char_counts,
+                            ...Object.fromEntries(
+                                Object.entries(assets).map(([k, v]) => [
+                                    k,
+                                    v ? v.length : 0,
+                                ])
+                            ),
+                        };
+                    }
+
+                    if (reasoning) {
+                        df.reasoning = { ...df.reasoning, ...reasoning };
+                    }
+
+                    if (meta) {
+                        df.meta = { ...df.meta, ...meta };
+                    }
+
+                    if (limits) {
+                        df.limits = { ...df.limits, ...limits };
+                    }
+
+                    const nextOverLimit: string[] = [];
+                    Object.entries(df.assets ?? {}).forEach(([key, value]) => {
+                        const limit = df.limits?.[key];
+                        const len =
+                            typeof value === "string" ? value.length : undefined;
+                        if (
+                            typeof limit === "number" &&
+                            typeof len === "number" &&
+                            len > limit
+                        ) {
+                            nextOverLimit.push(key);
+                        }
+                    });
+                    df.over_limit_fields = nextOverLimit;
+                    df.over_limit_count = nextOverLimit.length;
+
+                    storyLocation.story.derived_fields = df;
                 }
             });
 
             queryClient.setQueryData(projectQueryKey, optimisticProject);
             return { previousProject };
         },
-        onError: (_err, _payload, context) => {
+        onError: (error, _payload, context) => {
             context?.previousProject &&
                 queryClient.setQueryData(
                     projectQueryKey,
                     context.previousProject
                 );
+
+            let message = "Failed to save changes.";
+            if (error instanceof AxiosError) {
+                const responseMessage = error.response?.data?.message;
+                if (typeof responseMessage === "string") {
+                    message = responseMessage;
+                }
+            }
+
+            showToast({ type: "error", message });
         },
         onSettled: () => {
             void queryClient.invalidateQueries({ queryKey: projectQueryKey });

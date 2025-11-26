@@ -56,6 +56,7 @@ class SyncEpicsAction
 
                 $story->fill([
                     'content' => $storyData['content'],
+                    'original_content' => $storyData['content'],
                     'priority' => $storyData['priority'] ?? ($story->priority ?? 'medium'),
                     'position' => $storyPosition,
                     'is_ai_generated' => true,

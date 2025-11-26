@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateUserStoryRequest;
 use App\Http\Resources\UserStoryResource;
 use App\Models\Epic;
 use App\Models\UserStory;
+use App\Support\AdAssetFormatter;
+use App\Support\AdAssetParser;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -28,6 +30,7 @@ class UserStoryController extends Controller
 
         $userStory = $epic->userStories()->create([
             'content' => $validated['content'],
+            'original_content' => $validated['content'],
             'priority' => 'medium',
             'position' => ($maxPosition ?? 0) + 100,
             'is_ai_generated' => false, // Mark as user-created
@@ -45,12 +48,40 @@ class UserStoryController extends Controller
     public function update(UpdateUserStoryRequest $request, UserStory $userStory): UserStoryResource
     {
         $updateData = $request->validated();
-        
-        // Mark as user-modified, protecting it from AI overwrites
-        $updateData['is_ai_generated'] = false;
-        $updateData['origin_prompt_hash'] = null;
+        $userStory->loadMissing('epic');
+        $parser = app(AdAssetParser::class);
+        $formatter = app(AdAssetFormatter::class);
+        $existing = $parser->parse($userStory->content ?? '', $userStory->epic->title ?? null);
 
-        $userStory->update($updateData);
+        $meta = $existing['meta'] ?? [];
+        unset($meta['_unparsed_segments']);
+        $assets = $existing['assets'] ?? [];
+        $reasoning = $existing['reasoning'] ?? [];
+        $limits = $updateData['limits'] ?? [];
+
+        $meta = array_merge($meta, $updateData['meta'] ?? []);
+        $assets = array_merge($assets, $updateData['assets'] ?? []);
+        $reasoning = array_merge($reasoning, $updateData['reasoning'] ?? []);
+        $content = $updateData['content'] ?? null;
+
+        if ($content === null) {
+            $content = $formatter->format([
+                'meta' => $meta,
+                'assets' => $assets,
+                'reasoning' => $reasoning,
+                'limits' => $limits,
+            ]);
+        }
+
+        // Mark as user-modified, protecting it from AI overwrites
+        $payload = [
+            'content' => $content,
+            'priority' => $updateData['priority'] ?? $userStory->priority,
+            'is_ai_generated' => false,
+            'origin_prompt_hash' => null,
+        ];
+
+        $userStory->update($payload);
 
         return new UserStoryResource($userStory->fresh());
     }
