@@ -2,6 +2,25 @@ import { http, ensureCsrf } from "./lib/http";
 import { AxiosError } from "axios";
 import { Paginated, Project, ProjectSummary, UserStory } from "./types";
 
+export interface AuthUser {
+    id: number;
+    name: string;
+    email: string;
+}
+
+export interface RegisterPayload {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
+
+export interface LoginPayload {
+    email: string;
+    password: string;
+    remember?: boolean;
+}
+
 type ResourceResponse<T> = {
     data: T;
 };
@@ -83,10 +102,12 @@ export const retryBlueprintGeneration = async (projectId: string) => {
     return response.data;
 };
 
-export const getUser = async () => {
+export const getUser = async (): Promise<AuthUser | null> => {
     try {
-        const response = await http.get("/user");
-        return response.data;
+        const response = await http.get<ResourceResponse<AuthUser> | AuthUser>(
+            "/user"
+        );
+        return unwrapResource(response.data);
     } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 401) {
             return null;
@@ -95,22 +116,23 @@ export const getUser = async () => {
     }
 };
 
-export const login = async (credentials: any) => {
+export const login = async (
+    credentials: LoginPayload
+): Promise<void> => {
     await ensureCsrf();
-    const response = await http.post("/login", credentials);
-    return response.data;
+    await http.post("/login", credentials);
 };
 
-export const register = async (userData: any) => {
+export const register = async (
+    userData: RegisterPayload
+): Promise<void> => {
     await ensureCsrf();
-    const response = await http.post("/register", userData);
-    return response.data;
+    await http.post("/register", userData);
 };
 
-export const logout = async () => {
+export const logout = async (): Promise<void> => {
     await ensureCsrf();
-    const response = await http.post("/logout");
-    return response.data;
+    await http.post("/logout");
 };
 
 export const generateStoryForEpic = async (

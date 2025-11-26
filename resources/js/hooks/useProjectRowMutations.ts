@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 import {
     deleteProject as deleteProjectRequest,
@@ -9,6 +10,33 @@ import { qk } from "@/lib/queryKeys";
 import { Project } from "@/types";
 
 const PROJECT_LIST_KEY = ["projects", "mine"] as const;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof AxiosError) {
+        const maybeMessage =
+            error.response?.data &&
+            typeof error.response.data === "object" &&
+            error.response.data !== null &&
+            "message" in error.response.data
+                ? (error.response.data as { message?: string }).message
+                : undefined;
+        if (maybeMessage) {
+            return maybeMessage;
+        }
+        if (typeof error.message === "string" && error.message.length > 0) {
+            return error.message;
+        }
+    }
+    if (
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+    ) {
+        return (error as { message: string }).message;
+    }
+    return fallback;
+};
 
 export function useProjectRowMutations(projectId: string) {
     const queryClient = useQueryClient();
@@ -35,8 +63,11 @@ export function useProjectRowMutations(projectId: string) {
             });
             showToast({ type: "success", message: "Project renamed." });
         },
-        onError: () => {
-            showToast({ type: "error", message: "Unable to rename project." });
+        onError: (error) => {
+            showToast({
+                type: "error",
+                message: getErrorMessage(error, "Unable to rename project."),
+            });
         },
     });
 
@@ -53,8 +84,11 @@ export function useProjectRowMutations(projectId: string) {
             });
             showToast({ type: "success", message: "Project deleted." });
         },
-        onError: () => {
-            showToast({ type: "error", message: "Unable to delete project." });
+        onError: (error) => {
+            showToast({
+                type: "error",
+                message: getErrorMessage(error, "Unable to delete project."),
+            });
         },
     });
 

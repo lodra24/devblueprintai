@@ -15,32 +15,16 @@ import {
     register as apiRegister,
     logout as apiLogout,
     claimProject,
+    type AuthUser,
+    type LoginPayload,
+    type RegisterPayload,
 } from "@/api";
 import { ensureCsrf } from "@/lib/http";
 import { GUEST_PROJECT_ID_KEY } from "@/constants";
 import { routeUrls } from "@/routes";
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-}
-
-interface RegisterPayload {
-    name: string;
-    email: string;
-    password: string;
-    password_confirmation: string;
-}
-
-interface LoginPayload {
-    email: string;
-    password: string;
-    remember?: boolean;
-}
-
 interface AuthContextType {
-    user: User | null;
+    user: AuthUser | null;
     isAuthLoading: boolean;
     register: (data: RegisterPayload) => Promise<void>;
     login: (data: LoginPayload) => Promise<void>;
@@ -50,7 +34,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const navigate = useNavigate();
 

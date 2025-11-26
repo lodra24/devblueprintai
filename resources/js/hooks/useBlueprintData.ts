@@ -9,18 +9,13 @@ import {
 import { AxiosError } from "axios";
 import { Project, ProjectStatus } from "@/types";
 import { getProject } from "@/api";
+import { BLUEPRINT_POLLING_INTERVAL_MS } from "@/constants";
 import Echo from "@/lib/echo";
 import { qk } from "@/lib/queryKeys";
-
-const POLLING_INTERVAL_MS = 5000;
-
-type BlueprintStatusEvent = {
-    project_id: string;
-    status: ProjectStatus;
-    progress: number;
-    stage?: string | null;
-    message?: string | null;
-};
+import {
+    applyBlueprintStatusEvent,
+    BlueprintStatusEvent,
+} from "@/lib/blueprintUtils";
 
 const shouldPollStatus = (status?: ProjectStatus): boolean => {
     if (!status) return false;
@@ -79,7 +74,7 @@ export const useBlueprintData = (
 
             const project = query.state.data;
             return project && shouldPollStatus(project.status)
-                ? POLLING_INTERVAL_MS
+                ? BLUEPRINT_POLLING_INTERVAL_MS
                 : false;
         },
         refetchOnWindowFocus: false,
@@ -104,53 +99,10 @@ export const useBlueprintData = (
 
                 queryClient.setQueryData<Project | undefined>(
                     qk.project(projectId),
-                    (previous) => {
-                        if (!previous) {
-                            return previous;
-                        }
-
-                        const nextStatus = event.status;
-                        const incomingProgress =
-                            event.progress ?? previous.progress ?? 0;
-                        const nextProgress = Math.max(
-                            previous.progress ?? 0,
-                            incomingProgress
-                        );
-                        const nextStage =
-                            event.stage ??
-                            (nextStatus === "ready" || nextStatus === "failed"
-                                ? nextStatus
-                                : previous.stage ?? nextStatus);
-
-                        let nextMessage =
-                            previous.message && nextStatus === "failed"
-                                ? previous.message
-                                : null;
-
-                        if (event.status === "failed") {
-                            nextMessage = event.message ?? previous.message ?? null;
-                        } else if (event.message !== undefined) {
-                            nextMessage = event.message;
-                        }
-
-                        const didChange =
-                            previous.status !== nextStatus ||
-                            previous.progress !== nextProgress ||
-                            previous.stage !== nextStage ||
-                            previous.message !== nextMessage;
-
-                        if (!didChange) {
-                            return previous;
-                        }
-
-                        return {
-                            ...previous,
-                            status: nextStatus,
-                            progress: nextProgress,
-                            stage: nextStage,
-                            message: nextMessage,
-                        };
-                    }
+                    (previous) =>
+                        previous
+                            ? applyBlueprintStatusEvent(previous, event)
+                            : previous
                 );
 
                 if (

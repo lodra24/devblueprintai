@@ -19,6 +19,12 @@ export const AD_LIMITS = {
 
 export const GUEST_PROJECT_ID_KEY = "guestProjectId";
 
+export const BLUEPRINT_POLLING_INTERVAL_MS = 5000;
+
+export const SMOOTH_PROGRESS_SPEED_FACTOR = 0.00005;
+export const SMOOTH_PROGRESS_MIN_TRICKLE = 0.0002;
+export const SMOOTH_PROGRESS_FINISH_RATE = 0.1;
+
 export const theme = {
     fonts: {
         display: "'Sora','Inter','system-ui','sans-serif'",

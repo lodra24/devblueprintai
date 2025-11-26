@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthCallToAction from "@/components/AuthCallToAction";
@@ -91,9 +91,9 @@ function BlueprintPage() {
         setSelectedStoryId(null);
     }, [selectedStory, selectedStoryId]);
 
-    const handleCardSelect = (story: UserStory) => {
+    const handleCardSelect = useCallback((story: UserStory) => {
         setSelectedStoryId(story.id);
-    };
+    }, []);
 
     const renderContent = () => {
         if (isLoading || isAuthLoading) {

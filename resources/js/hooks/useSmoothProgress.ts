@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import {
+    SMOOTH_PROGRESS_FINISH_RATE,
+    SMOOTH_PROGRESS_MIN_TRICKLE,
+    SMOOTH_PROGRESS_SPEED_FACTOR,
+} from "@/constants";
 
 export const useSmoothProgress = (
     backendProgress: number | null | undefined,
@@ -55,14 +60,14 @@ export const useSmoothProgress = (
                         if (prev >= 100) {
                             return 100;
                         }
-                        const finishStep = 0.1 * deltaTime;
+                        const finishStep = SMOOTH_PROGRESS_FINISH_RATE * deltaTime;
                         return Math.min(prev + finishStep, 100);
                     }
 
                     const distance = target - prev;
-                    const speedFactor = 0.00005;
-                    let step = distance * speedFactor * deltaTime;
-                    const minTrickle = 0.0002 * deltaTime;
+                    let step =
+                        distance * SMOOTH_PROGRESS_SPEED_FACTOR * deltaTime;
+                    const minTrickle = SMOOTH_PROGRESS_MIN_TRICKLE * deltaTime;
 
                     if (step < minTrickle) {
                         step = minTrickle;
