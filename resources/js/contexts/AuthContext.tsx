@@ -38,14 +38,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const navigate = useNavigate();
 
-    const fetchUser = useCallback(async (isMountedChecker: () => boolean) => {
+    const fetchUser = useCallback(async (signal?: AbortSignal) => {
         try {
-            const userData = await getUser();
-            if (isMountedChecker()) {
+            const userData = await getUser({ signal });
+            if (!signal?.aborted) {
                 setUser(userData);
             }
         } catch (error) {
-            if (isMountedChecker()) {
+            if (!signal?.aborted) {
                 setUser(null);
             }
             console.error("Not authenticated or failed to fetch user.");
@@ -53,8 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        let isMounted = true;
-        const isMountedChecker = () => isMounted;
+        const controller = new AbortController();
 
         const initializeAuth = async () => {
             try {
@@ -62,8 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } catch (error) {
                 console.error("Failed to fetch CSRF cookie:", error);
             } finally {
-                await fetchUser(isMountedChecker);
-                if (isMounted) {
+                await fetchUser(controller.signal);
+                if (!controller.signal.aborted) {
                     setIsAuthLoading(false);
                 }
             }
@@ -72,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         void initializeAuth();
 
         return () => {
-            isMounted = false;
+            controller.abort();
         };
     }, [fetchUser]);
 
@@ -98,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = useCallback(
         async (data: RegisterPayload) => {
             await apiRegister(data);
-            await fetchUser(() => true);
+            await fetchUser();
             await handlePostAuth();
         },
         [fetchUser, handlePostAuth]
@@ -107,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = useCallback(
         async (data: LoginPayload) => {
             await apiLogin(data);
-            await fetchUser(() => true);
+            await fetchUser();
             await handlePostAuth();
         },
         [fetchUser, handlePostAuth]

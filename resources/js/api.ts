@@ -102,10 +102,15 @@ export const retryBlueprintGeneration = async (projectId: string) => {
     return response.data;
 };
 
-export const getUser = async (): Promise<AuthUser | null> => {
+export const getUser = async (
+    options: { signal?: AbortSignal } = {}
+): Promise<AuthUser | null> => {
     try {
         const response = await http.get<ResourceResponse<AuthUser> | AuthUser>(
-            "/user"
+            "/user",
+            {
+                signal: options.signal,
+            }
         );
         return unwrapResource(response.data);
     } catch (error) {

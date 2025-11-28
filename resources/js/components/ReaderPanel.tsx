@@ -4,6 +4,7 @@ import React, {
     useRef,
     useState,
 } from "react";
+import FocusTrap from "focus-trap-react";
 import { DerivedFields, UserStory } from "@/types";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ReaderPanelField from "@/components/reader/ReaderPanelField";
@@ -49,14 +50,6 @@ const ASSET_FIELD_KEYS = [
     CTA_FIELD.key,
 ];
 const REASONING_FIELD_KEYS = REASONING_FIELDS.map((f) => f.key);
-const FOCUSABLE_SELECTORS = [
-    "a[href]",
-    "button:not([disabled])",
-    "textarea:not([disabled])",
-    "input:not([disabled])",
-    "select:not([disabled])",
-    '[tabindex]:not([tabindex="-1"])',
-];
 
 const ReaderPanel: React.FC<ReaderPanelProps> = ({
     story,
@@ -97,26 +90,12 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const copyTimeoutRef = useRef<number | null>(null);
     const panelRef = useRef<HTMLElement | null>(null);
-    const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
     const fieldId = useCallback(
         (bucket: "assets" | "reasoning" | "meta", key: string) =>
             `${bucket}:${key}`,
         []
     );
-
-    const getFocusableElements = useCallback((root: HTMLElement | null) => {
-        if (!root) return [];
-
-        return Array.from(
-            root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS.join(","))
-        ).filter(
-            (element) =>
-                !element.hasAttribute("disabled") &&
-                element.tabIndex !== -1 &&
-                element.offsetParent !== null
-        );
-    }, []);
 
     const handleAttemptClose = useCallback(() => {
         if (hasPendingSave) {
@@ -167,67 +146,9 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
 
     useEffect(() => {
         if (!isOpen) {
-            previouslyFocusedRef.current = null;
             return;
         }
-
-        const panelEl = panelRef.current;
-        if (!panelEl) {
-            return;
-        }
-
-        previouslyFocusedRef.current =
-            document.activeElement instanceof HTMLElement
-                ? (document.activeElement as HTMLElement)
-                : null;
-
-        const focusable = getFocusableElements(panelEl);
-        if (focusable.length > 0) {
-            focusable[0].focus();
-        }
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== "Tab") {
-                return;
-            }
-
-            const focusableElements = getFocusableElements(panelRef.current);
-            if (focusableElements.length === 0) {
-                return;
-            }
-
-            const first = focusableElements[0];
-            const last = focusableElements[focusableElements.length - 1];
-            const activeElement = document.activeElement as HTMLElement | null;
-            const isOutsidePanel =
-                activeElement && panelRef.current
-                    ? !panelRef.current.contains(activeElement)
-                    : true;
-
-            if (event.shiftKey) {
-                if (activeElement === first || isOutsidePanel) {
-                    event.preventDefault();
-                    last.focus();
-                }
-                return;
-            }
-
-            if (activeElement === last || isOutsidePanel) {
-                event.preventDefault();
-                first.focus();
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-            if (previouslyFocusedRef.current instanceof HTMLElement) {
-                previouslyFocusedRef.current.focus();
-            }
-            previouslyFocusedRef.current = null;
-        };
-    }, [getFocusableElements, isOpen]);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -406,12 +327,21 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                     }`}
                     onClick={handleAttemptClose}
                 />
-                <aside
-                    ref={panelRef}
-                    className={`absolute right-0 top-0 h-full w-full max-w-xl transform transition-transform duration-300 ease-out ${
-                        isOpen ? "translate-x-0" : "translate-x-full"
-                    } border-l border-stone/20 bg-white text-ink shadow-deep`}
+                <FocusTrap
+                    active={isOpen}
+                    focusTrapOptions={{
+                        fallbackFocus: () => panelRef.current ?? document.body,
+                        allowOutsideClick: true,
+                        returnFocusOnDeactivate: true,
+                        escapeDeactivates: false,
+                    }}
                 >
+                    <aside
+                        ref={panelRef}
+                        className={`absolute right-0 top-0 h-full w-full max-w-xl transform transition-transform duration-300 ease-out ${
+                            isOpen ? "translate-x-0" : "translate-x-full"
+                        } border-l border-stone/20 bg-white text-ink shadow-deep`}
+                    >
                     <div className="flex h-full flex-col">
                         <header className="flex items-start justify-between border-b border-stone/20 px-6 py-5">
                             <div className="space-y-2">
@@ -682,7 +612,8 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                         {footer}
                     </div>
                 </aside>
-            </div>
+            </FocusTrap>
+        </div>
 
             <ConfirmModal
                 open={showCloseConfirm}

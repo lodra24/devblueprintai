@@ -21,10 +21,19 @@ type UseReaderFormParams = {
     reasoningKeys: ReadonlyArray<ReasoningKey>;
 };
 
-const sanitizeMeta = (meta: Record<string, any>) =>
-    Object.fromEntries(
-        Object.entries(meta).filter(([key]) => !key.startsWith("_"))
-    );
+const sanitizeMeta = (
+    meta: Record<string, unknown> | undefined
+): Record<string, string | null | undefined> => {
+    const safeEntries = Object.entries(meta ?? {})
+        .filter(([key]) => !key.startsWith("_"))
+        .map(([key, value]) => [
+            key,
+            typeof value === "string" || value === null || value === undefined
+                ? value
+                : String(value),
+        ]);
+    return Object.fromEntries(safeEntries);
+};
 
 export const useReaderForm = ({
     story,
@@ -36,7 +45,23 @@ export const useReaderForm = ({
     const originalDerived =
         story?.original_derived_fields ?? story?.derived_fields;
 
-    const filterEditableMeta = useCallback(sanitizeMeta, []);
+    const filterEditableMeta = useCallback(
+        (meta: Record<string, unknown> | undefined) => sanitizeMeta(meta),
+        []
+    );
+    const getOriginalValue = useCallback(
+        (bucket: Bucket, key: string) => {
+            const bucketData =
+                originalDerived?.[bucket] as
+                    | Record<string, string | null | undefined>
+                    | undefined;
+            const value = bucketData?.[key];
+            if (typeof value === "string") return value;
+            if (value === null || value === undefined) return "";
+            return String(value);
+        },
+        [originalDerived]
+    );
 
     const [draftAssets, setDraftAssets] = useState<
         Record<string, string | null | undefined>
@@ -46,13 +71,13 @@ export const useReaderForm = ({
     >(() => derived?.reasoning ?? {});
     const [draftMeta, setDraftMeta] = useState<
         Record<string, string | null | undefined>
-    >(() => filterEditableMeta(derived?.meta ?? {}));
+    >(() => filterEditableMeta(derived?.meta));
     const [recentlyRestored, setRecentlyRestored] = useState(false);
 
     useEffect(() => {
         setDraftAssets(derived?.assets ?? {});
         setDraftReasoning(derived?.reasoning ?? {});
-        setDraftMeta(filterEditableMeta(derived?.meta ?? {}));
+        setDraftMeta(filterEditableMeta(derived?.meta));
         setRecentlyRestored(false);
     }, [story?.id, filterEditableMeta]);
 
@@ -75,8 +100,7 @@ export const useReaderForm = ({
 
     const handleFieldRestore = useCallback(
         (bucket: Bucket, key: string) => {
-            const originalValue =
-                (originalDerived as any)?.[bucket]?.[key] ?? "";
+            const originalValue = getOriginalValue(bucket, key);
             if (bucket === "assets") {
                 setDraftAssets((prev) => ({ ...prev, [key]: originalValue }));
             } else if (bucket === "reasoning") {
@@ -88,7 +112,7 @@ export const useReaderForm = ({
                 setDraftMeta((prev) => ({ ...prev, [key]: originalValue }));
             }
         },
-        [originalDerived]
+        [getOriginalValue]
     );
 
     const isFieldDirty = useCallback(
@@ -99,12 +123,11 @@ export const useReaderForm = ({
                     : bucket === "reasoning"
                     ? draftReasoning[key]
                     : draftMeta[key];
-            const originalValue =
-                (originalDerived as any)?.[bucket]?.[key] ?? "";
+            const originalValue = getOriginalValue(bucket, key);
 
             return (draftValue ?? "") !== (originalValue ?? "");
         },
-        [draftAssets, draftMeta, draftReasoning, originalDerived]
+        [draftAssets, draftMeta, draftReasoning, getOriginalValue]
     );
 
     const hasUnsavedChanges = useMemo(() => {
@@ -124,8 +147,8 @@ export const useReaderForm = ({
 
         const isDifferent = (
             draftVal: string | null | undefined,
-            dbVal: any
-        ) => (draftVal ?? "") !== ((dbVal as string) ?? "");
+            dbVal: string | null | undefined
+        ) => (draftVal ?? "") !== (dbVal ?? "");
 
         const assetsChanged = assetKeys.some((key) =>
             isDifferent(draftAssets[key], derived.assets?.[key])
@@ -197,7 +220,7 @@ export const useReaderForm = ({
                     setDraftAssets(updated.derived_fields?.assets ?? {});
                     setDraftReasoning(updated.derived_fields?.reasoning ?? {});
                     setDraftMeta(
-                        filterEditableMeta(updated.derived_fields?.meta ?? {})
+                        filterEditableMeta(updated.derived_fields?.meta)
                     );
                 },
             }
@@ -219,7 +242,9 @@ export const useReaderForm = ({
                 onSuccess: (updated) => {
                     setDraftAssets(updated.derived_fields?.assets ?? {});
                     setDraftReasoning(updated.derived_fields?.reasoning ?? {});
-                    setDraftMeta(updated.derived_fields?.meta ?? {});
+                    setDraftMeta(
+                        filterEditableMeta(updated.derived_fields?.meta)
+                    );
                     setRecentlyRestored(true);
                 },
             }
