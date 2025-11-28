@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -8,6 +8,10 @@ import { Epic, UserStory } from "@/types";
 import Card from "./Card";
 import { BoardDensity } from "@/types";
 import { useGenerateAiUserStory } from "@/hooks/useUserStoryMutations";
+import { triggerConfetti } from "@/lib/confetti";
+
+const SCROLL_SETTLE_MS = 500;
+const HIGHLIGHT_DURATION_MS = 2500;
 
 interface ColumnProps {
     projectId: string;
@@ -27,20 +31,66 @@ const Column: React.FC<ColumnProps> = ({
     });
     const listRef = useRef<HTMLDivElement | null>(null);
     const previousCountRef = useRef<number>(epic.user_stories.length);
+    const [highlightedStoryId, setHighlightedStoryId] = useState<string | null>(
+        null
+    );
+    const isManualGenerationRef = useRef(false);
+    const scrollTimeoutRef = useRef<number | null>(null);
+    const highlightTimeoutRef = useRef<number | null>(null);
     const generateStoryMutation = useGenerateAiUserStory(projectId);
 
     useEffect(() => {
         if (epic.user_stories.length > previousCountRef.current) {
             const lastChild = listRef.current?.lastElementChild;
+            const newStory = epic.user_stories[epic.user_stories.length - 1];
             if (lastChild) {
                 lastChild.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+                if (isManualGenerationRef.current) {
+                    if (newStory) {
+                        setHighlightedStoryId(newStory.id);
+                        if (highlightTimeoutRef.current) {
+                            clearTimeout(highlightTimeoutRef.current);
+                        }
+                        highlightTimeoutRef.current = window.setTimeout(() => {
+                            setHighlightedStoryId(null);
+                            highlightTimeoutRef.current = null;
+                        }, HIGHLIGHT_DURATION_MS);
+                    }
+
+                    const timeoutId = window.setTimeout(() => {
+                        void triggerConfetti();
+                        isManualGenerationRef.current = false;
+                        scrollTimeoutRef.current = null;
+                    }, SCROLL_SETTLE_MS);
+                    scrollTimeoutRef.current = timeoutId;
+                }
             }
         }
         previousCountRef.current = epic.user_stories.length;
+
+        return () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+                scrollTimeoutRef.current = null;
+            }
+            if (highlightTimeoutRef.current) {
+                clearTimeout(highlightTimeoutRef.current);
+                highlightTimeoutRef.current = null;
+            }
+        };
     }, [epic.user_stories.length]);
 
     const handleGenerateClick = () => {
-        generateStoryMutation.mutate({ epicId: epic.id });
+        isManualGenerationRef.current = true;
+        generateStoryMutation.mutate(
+            { epicId: epic.id },
+            {
+                onError: () => {
+                    isManualGenerationRef.current = false;
+                },
+            }
+        );
     };
 
     return (
@@ -82,6 +132,7 @@ const Column: React.FC<ColumnProps> = ({
                             epicId={epic.id}
                             onSelect={onCardSelect}
                             density={density}
+                            isHighlighted={story.id === highlightedStoryId}
                         />
                     ))}
                 </div>

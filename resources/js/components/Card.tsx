@@ -9,6 +9,7 @@ interface CardProps {
     epicId: string;
     onSelect?: (story: UserStory) => void;
     density?: BoardDensity;
+    isHighlighted?: boolean;
 }
 
 type AssetKey = keyof DerivedFields["assets"];
@@ -54,6 +55,7 @@ const Card: React.FC<CardProps> = ({
     epicId,
     onSelect,
     density = "comfortable",
+    isHighlighted = false,
 }) => {
     const {
         attributes,
@@ -81,8 +83,11 @@ const Card: React.FC<CardProps> = ({
     const hookText = assets.hook ?? "";
     const ctaText = assets.cta ?? "";
 
+    const transformString = CSS.Transform.toString(transform);
+    const highlightScale = isHighlighted && !isDragging ? " scale(1.01)" : "";
+    const transformValue = `${transformString ?? ""}${highlightScale}`.trim();
     const style = {
-        transform: CSS.Transform.toString(transform),
+        transform: transformValue || undefined,
         transition,
     };
 
@@ -137,6 +142,14 @@ const Card: React.FC<CardProps> = ({
         onSelect?.(story);
     };
 
+    const containerStateClasses = isHighlighted
+        ? "border-emerald-400 bg-emerald-50/40 shadow-[0_0_25px_rgba(52,211,153,0.35)] ring-1 ring-emerald-400 z-10"
+        : "border-stone/20 bg-white/95 hover:border-accent/30";
+
+    const finalStateClasses = isDragging
+        ? "ring-2 ring-accent/40 opacity-80 z-20 bg-white"
+        : containerStateClasses;
+
     return (
         <div
             ref={setNodeRef}
@@ -150,11 +163,7 @@ const Card: React.FC<CardProps> = ({
                     handleCardClick();
                 }
             }}
-            className={`flex flex-col rounded-2xl border border-stone/20 bg-white/95 text-ink shadow-deep transition ${densityContainerClasses[density]} ${
-                isDragging
-                    ? "ring-2 ring-accent/40 opacity-80"
-                    : "hover:border-accent/30"
-            } focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30`}
+            className={`flex flex-col rounded-2xl border text-ink shadow-deep transition-all duration-1000 ease-out ${densityContainerClasses[density]} ${finalStateClasses} focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">

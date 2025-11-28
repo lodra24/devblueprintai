@@ -237,7 +237,6 @@ function BlueprintPage() {
             </div>
 
             <ReaderPanel
-                key={selectedStoryId ?? "empty"}
                 story={selectedStory}
                 isOpen={!!selectedStoryId}
                 onClose={() => setSelectedStoryId(null)}
