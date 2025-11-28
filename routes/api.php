@@ -22,15 +22,16 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::apiResource('projects', ProjectController::class)->only([
-    'store', 'show'
-]);
+Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+
+Route::middleware('ai.quota')->group(function () {
+    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/{project}/retry', [ProjectController::class, 'retry'])->name('projects.retry');
+});
 
 Route::post('/projects/claim', [ClaimProjectController::class, '__invoke'])
     ->middleware('auth:sanctum')
     ->name('projects.claim');
-Route::post('/projects/{project}/retry', [ProjectController::class, 'retry'])
-    ->name('projects.retry');
 
 // --- CRUD & Reorder Routes ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -43,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('user-stories.restore');
     Route::get('/my-projects', [ProjectController::class, 'myProjects'])->name('projects.my');
     Route::post('/epics/{epic}/generate-story', [GenerateEpicStoryController::class, '__invoke'])
+        ->middleware('ai.quota')
         ->name('epics.generate-story');
 });
 

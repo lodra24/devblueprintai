@@ -33,6 +33,7 @@ class ProjectController extends Controller
         $project->user_id = $userId;
         $project->status = ProjectStatus::Generating;
         $project->progress = 0;
+        $project->origin_ip_address = $request->ip();
         $project->save();
 
         GenerateBlueprintJob::dispatch($project->id);

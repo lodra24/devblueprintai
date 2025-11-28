@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { retryBlueprintGeneration } from "@/api";
 import { qk } from "@/lib/queryKeys";
 import { Project } from "@/types";
+import { useToast } from "@/contexts/ToastContext";
 
 type RetryContext = {
     previousProject?: Project;
@@ -9,6 +10,7 @@ type RetryContext = {
 
 export const useRetryBlueprint = (projectId?: string) => {
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
 
     const mutation = useMutation<void, Error, void, RetryContext>({
         mutationFn: async () => {
@@ -41,12 +43,20 @@ export const useRetryBlueprint = (projectId?: string) => {
 
             return { previousProject };
         },
-        onError: (_error, _variables, context) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any, _variables, context) => {
             if (!projectId || !context?.previousProject) {
+                const message =
+                    error?.response?.data?.message || "Retry failed.";
+                showToast({ type: "error", message });
                 return;
             }
 
             queryClient.setQueryData(qk.project(projectId), context.previousProject);
+
+            const message =
+                error?.response?.data?.message || "Retry failed.";
+            showToast({ type: "error", message });
         },
         onSettled: () => {
             if (!projectId) {
@@ -70,4 +80,3 @@ export const useRetryBlueprint = (projectId?: string) => {
         isRetrying: mutation.isPending,
     };
 };
-

@@ -139,6 +139,7 @@ class AiGenerationService
             'latency_ms' => round($latency * 1000),
             'status_code' => $statusCode,
             'finish_reason' => $finishReason,
+            'ip_address' => $project->origin_ip_address,
         ]);
     }
 

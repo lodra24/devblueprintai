@@ -9,6 +9,10 @@ return [
         'title_max' => env('BLUEPRINT_LIMIT_TITLE_MAX', 255),
         'story_max' => env('BLUEPRINT_LIMIT_STORY_MAX', 1000),
         'column_token_max' => env('BLUEPRINT_LIMIT_COLUMN_TOKEN_MAX', 255),
+        'usage' => [
+            'guest_daily_limit' => 2,
+            'user_daily_limit' => 5,
+        ],
     ],
     'ad_limits' => [
         'hook' => 60,
