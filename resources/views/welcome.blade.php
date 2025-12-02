@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DevBluePrint AI</title>
-
+    <title>Prism AI - Marketing Angles Generator</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <!-- Fonts: Sora + Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 

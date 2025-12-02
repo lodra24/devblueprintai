@@ -24,13 +24,49 @@ const Header: React.FC = () => {
                 className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6"
                 aria-label="Global"
             >
-                <Link
-                    to={routeUrls.home}
-                    className="flex items-center gap-3 text-left"
-                >
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent to-accent/60" />
-                    <span className="font-display text-base font-bold tracking-tight text-ink sm:text-lg">
-                        MarketingBlueprint <span className="font-normal text-stone">AI</span>
+                <Link to={routeUrls.home} className="group flex items-center gap-2.5 text-left">
+                    <div className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                        <svg
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="drop-shadow-sm"
+                        >
+                            <defs>
+                                <linearGradient
+                                    id="prismBlueGradient"
+                                    x1="2"
+                                    y1="3"
+                                    x2="22"
+                                    y2="20"
+                                    gradientUnits="userSpaceOnUse"
+                                >
+                                    <stop offset="0%" stopColor="#6366F1" />
+                                    <stop offset="100%" stopColor="#0EA5E9" />
+                                </linearGradient>
+                            </defs>
+                            <path
+                                d="M12 3L21 20H3L12 3Z"
+                                stroke="url(#prismBlueGradient)"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            <path
+                                d="M7.5 11.5L12 11.5L16.5 20"
+                                stroke="url(#prismBlueGradient)"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="opacity-60"
+                            />
+                        </svg>
+                    </div>
+
+                    <span className="font-display text-xl font-bold tracking-tight text-ink">
+                        Prism <span className="font-medium text-stone/50">AI</span>
                     </span>
                 </Link>
 
@@ -39,14 +75,14 @@ const Header: React.FC = () => {
                         <>
                             <Link
                                 to={routeUrls.dashboard}
-                                className="text-sm text-stone transition-colors hover:text-ink"
+                                className="text-sm font-medium text-stone transition-colors hover:text-ink"
                             >
-                                My Projects
+                                Dashboard
                             </Link>
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="rounded-lg bg-ink px-3 py-1.5 text-sm text-white transition-opacity hover:opacity-90"
+                                className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 shadow-md"
                             >
                                 Log out
                             </button>
@@ -55,15 +91,15 @@ const Header: React.FC = () => {
                         <>
                             <Link
                                 to={routeUrls.login}
-                                className="text-sm text-stone transition-colors hover:text-ink"
+                                className="text-sm font-medium text-stone transition-colors hover:text-ink"
                             >
                                 Sign In
                             </Link>
                             <Link
                                 to={routeUrls.register}
-                                className="rounded-lg bg-ink px-3 py-1.5 text-center text-sm text-white transition-opacity hover:opacity-90"
+                                className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 shadow-md"
                             >
-                                Create Account
+                                Get Started
                             </Link>
                         </>
                     )}

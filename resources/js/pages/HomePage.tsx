@@ -27,11 +27,14 @@ export default function HomePage() {
             <div className="fixed inset-0 bg-minimal pointer-events-none" />
 
             <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
+                {/* Updated headline */}
                 <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight font-bold break-words">
-                    MarketingBlueprint <span className="text-accent">AI</span>
+                    Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500">Prism</span>.<br />
+                    Your AI Marketing Architect.
                 </h1>
-                <p className="mt-6 text-stone text-lg md:text-xl tracking-wide font-light">
-                    From Idea to Actionable Marketing Plan
+
+                <p className="mt-6 text-stone text-lg md:text-xl tracking-wide font-light max-w-3xl mx-auto">
+                    Instantly generate a structured board of psychological hooks, ad copy, and persona insights. From blank page to ready-to-test assets in seconds.
                 </p>
 
                 <div className="relative mt-14 md:mt-16">
@@ -39,7 +42,7 @@ export default function HomePage() {
                         <form onSubmit={handleSubmit} className="space-y-6 text-left">
                             <InputFloat
                                 id="project-name"
-                                label="Project Name"
+                                label="Brand or Project Name"
                                 inputProps={{
                                     type: "text",
                                     name: "name",
@@ -56,7 +59,7 @@ export default function HomePage() {
 
                             <TextareaFloat
                                 id="project-idea"
-                                label="Your Project Idea"
+                                label="Product & Market Context"
                                 rows={4}
                                 textareaProps={{
                                     name: "idea_text",
@@ -79,21 +82,21 @@ export default function HomePage() {
                                 className="mt-6 disabled:opacity-60 disabled:pointer-events-none"
                                 disabled={isLoading}
                             >
-                                {isLoading ? "Generating..." : "Generate Blueprint"}
+                                {isLoading ? "Generating Blueprint..." : "Generate Marketing Blueprint"}
                             </ButtonEditorial>
 
+                            {/* Updated input hint */}
                             <p className="hint-text">
-                                e.g. "A new D2C skincare brand for women aged 18-30, aiming to grow
-                                subscriptions in 90 days..."
+                                e.g. "A new D2C skincare brand for women aged 30+, focusing on anti-aging with natural ingredients. Tone: Scientific but accessible."
                             </p>
                         </form>
                     </GlassCard>
                 </div>
 
-                <div className="mt-16 grid gap-3 sm:grid-cols-3 max-w-3xl mx-auto">
-                    <InfoCard titleTop="Focus" titleBottom="Persona x Channel Fit" />
-                    <InfoCard titleTop="Output" titleBottom="90-Day GTM Roadmap" />
-                    <InfoCard titleTop="Deliverables" titleBottom="Campaign Calendar & KPIs" />
+                <div className="mt-20 grid gap-4 sm:grid-cols-3 max-w-4xl mx-auto">
+                    <InfoCard icon="strategy" titleTop="STRATEGY" titleBottom="Psychological Angles" />
+                    <InfoCard icon="assets" titleTop="ASSETS" titleBottom="Hooks, Headlines & CTAs" />
+                    <InfoCard icon="insights" titleTop="INSIGHTS" titleBottom="Persona Deep-Dive" />
                 </div>
             </section>
         </main>
