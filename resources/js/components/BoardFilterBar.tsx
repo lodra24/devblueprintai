@@ -1,4 +1,5 @@
 import React, { FormEvent, useMemo } from "react";
+import { CloseIcon, SearchIcon } from "@/components/icons";
 import { BoardDensity, BoardFilters, BoardSortOption } from "@/types";
 
 interface BoardFilterBarProps {
@@ -115,29 +116,7 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
                     <label className="flex w-full items-center gap-3 rounded-2xl border border-stone/20 bg-white px-4 py-2.5 text-sm text-stone shadow-sm focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10">
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="text-stone"
-                        >
-                            <path
-                                d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M21 21L16.65 16.65"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                        </svg>
+                        <SearchIcon className="text-stone" />
                         <input
                             type="search"
                             value={searchTerm}
@@ -221,22 +200,7 @@ const BoardFilterBar: React.FC<BoardFilterBarProps> = ({
                             className="flex items-center gap-2 rounded-full border border-stone/20 bg-white px-3 py-1 text-xs font-semibold text-ink transition hover:border-accent/30"
                         >
                             {chip.label}
-                            <svg
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="text-stone"
-                            >
-                                <path
-                                    d="M7 7L17 17M7 17L17 7"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
+                            <CloseIcon className="text-stone" />
                         </button>
                     ))}
                     {hasActiveFilters && (

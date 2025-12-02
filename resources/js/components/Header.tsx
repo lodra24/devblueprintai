@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { PrismLogoIcon } from "@/components/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { routeUrls } from "@/routes";
 
@@ -26,43 +27,7 @@ const Header: React.FC = () => {
             >
                 <Link to={routeUrls.home} className="group flex items-center gap-2.5 text-left">
                     <div className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                        <svg
-                            width="32"
-                            height="32"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="drop-shadow-sm"
-                        >
-                            <defs>
-                                <linearGradient
-                                    id="prismBlueGradient"
-                                    x1="2"
-                                    y1="3"
-                                    x2="22"
-                                    y2="20"
-                                    gradientUnits="userSpaceOnUse"
-                                >
-                                    <stop offset="0%" stopColor="#6366F1" />
-                                    <stop offset="100%" stopColor="#0EA5E9" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d="M12 3L21 20H3L12 3Z"
-                                stroke="url(#prismBlueGradient)"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M7.5 11.5L12 11.5L16.5 20"
-                                stroke="url(#prismBlueGradient)"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="opacity-60"
-                            />
-                        </svg>
+                        <PrismLogoIcon className="drop-shadow-sm" />
                     </div>
 
                     <span className="font-display text-xl font-bold tracking-tight text-ink">

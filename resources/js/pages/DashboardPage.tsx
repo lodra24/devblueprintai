@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
+import { SearchSolidIcon } from "@/components/icons";
 import { useMyProjects, MY_PROJECTS_DEFAULT_PER_PAGE } from "@/hooks/useMyProjects";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -358,20 +359,7 @@ const DashboardPage: React.FC = () => {
                             onChange={(event) => setSearchTerm(event.target.value)}
                             disabled={!user || isLoading}
                         />
-                        <svg
-                            className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M12.9 14.32a7 7 0 111.414-1.414l3.39 3.39a1 1 0 01-1.415 1.414l-3.39-3.39zM14 9a5 5 0 11-10 0 5 5 0 0110 0z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
+                        <SearchSolidIcon className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
                     </div>
                     <div className="sm:hidden">
                         <Link

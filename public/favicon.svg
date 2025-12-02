@@ -6,12 +6,9 @@
     </linearGradient>
   </defs>
   
-  <!-- 
-    DÜZELTME: transform="translate(0, 1.5)" 
-    Bu kod tüm çizimi 1.5 birim aşağı indirir.
-  -->
+
   <g transform="translate(0, 2)">
-      <!-- Dış Üçgen -->
+     
       <path 
         d="M12 3L21 20H3L12 3Z" 
         stroke="url(#prismBlueGradient)" 
@@ -20,7 +17,7 @@
         stroke-linejoin="round" 
       />
       
-      <!-- İç Kırılma Çizgisi -->
+    
       <path 
         d="M7.5 11.5L12 11.5L16.5 20" 
         stroke="url(#prismBlueGradient)" 

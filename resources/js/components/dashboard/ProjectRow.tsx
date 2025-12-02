@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import {
+    ArrowRightIcon,
+    EditIcon,
+    KebabIcon,
+    TrashIcon,
+} from "@/components/icons";
 import { ProjectSummary } from "@/types/ProjectSummary";
 import { useProjectRowMutations } from "@/hooks/useProjectRowMutations";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -157,9 +163,7 @@ export default function ProjectRow({
                             ref={firstActionRef}
                             disabled={isRenaming || isDeleting}
                         >
-                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path d="M4 13.5V16h2.5L15.81 6.69l-2.5-2.5L4 13.5zm12.71-7.21a1 1 0 000-1.41l-1.59-1.59a1 1 0 00-1.41 0l-1.29 1.29 2.5 2.5 1.29-1.29z" />
-                            </svg>
+                            <EditIcon />
                             <span className="hidden sm:inline">Rename</span>
                         </button>
                         <button
@@ -168,9 +172,7 @@ export default function ProjectRow({
                             onClick={handleDeleteClick}
                             disabled={isDeleting}
                         >
-                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path d="M6 7h8l-.8 9.2a2 2 0 01-2 1.8H8.8a2 2 0 01-2-1.8L6 7zm7-3l-1-1H8L7 4H4v2h12V4h-3z" />
-                            </svg>
+                            <TrashIcon />
                             <span className="hidden sm:inline">Delete</span>
                         </button>
                     </div>
@@ -180,13 +182,7 @@ export default function ProjectRow({
                             className="open-btn"
                             onMouseEnter={onPrefetch}
                         >
-                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path
-                                    fillRule="evenodd"
-                                    d="M3 10a.75.75 0 01.75-.75h10.64L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.16-3.96H3.75A.75.75 0 013 10z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
+                            <ArrowRightIcon />
                             <span className="hidden sm:inline">Open Blueprint</span>
                             <span className="sm:hidden">Open</span>
                         </Link>
@@ -202,11 +198,7 @@ export default function ProjectRow({
                             onToggleMenu();
                         }}
                     >
-                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <circle cx="10" cy="3.5" r="1.5" />
-                            <circle cx="10" cy="10" r="1.5" />
-                            <circle cx="10" cy="16.5" r="1.5" />
-                        </svg>
+                        <KebabIcon />
                     </button>
                 </div>
             </div>

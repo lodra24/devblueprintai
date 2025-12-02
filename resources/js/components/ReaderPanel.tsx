@@ -5,6 +5,7 @@ import React, {
     useState,
 } from "react";
 import FocusTrap from "focus-trap-react";
+import { CloseIcon } from "@/components/icons";
 import { DerivedFields, UserStory } from "@/types";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ReaderPanelField from "@/components/reader/ReaderPanelField";
@@ -383,24 +384,10 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                             <button
                                 type="button"
                                 className="rounded-xl border border-stone/20 bg-white/90 p-2 text-stone transition hover:border-accent/40"
-                                onClick={handleAttemptClose}
-                                aria-label="Close reader panel"
-                            >
-                                <svg
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M6 6L18 18M6 18L18 6"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
+                            onClick={handleAttemptClose}
+                            aria-label="Close reader panel"
+                        >
+                                <CloseIcon width={18} height={18} />
                             </button>
                         </header>
 
