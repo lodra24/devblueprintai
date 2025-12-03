@@ -19,6 +19,17 @@
 
 ---
 
+## ✨ What It Does
+
+Prism AI creates a complete **Go-to-Market strategy** from a single prompt. Instead of chatting endlessly with an LLM, users input a business idea, and the system architecturally generates:
+
+-   **Psychological Angles (Epics):** Deconstructs the product value into distinct marketing angles (e.g., "Fear of Missing Out," "Status/Ego," "Logical Utility").
+-   **Asset Packs (User Stories):** Generates concrete copy assets for each angle, including **Google Ads Headlines**, **Email Subject Lines**, **Landing Page Hooks**, and **CTAs**.
+-   **Interactive Kanban Board:** A Trello-like interface where users can drag-and-drop assets to prioritize their marketing backlog.
+-   **Persona Data Modeling:** Automatically infers and structures the target audience's demographics, pain points, and motivations into a database schema format.
+-   **Variation Comparison:** A dedicated "Reader Mode" to compare different copy variations side-by-side for A/B test planning.
+-   **CSV Export:** One-click export of the entire blueprint to integrate with external project management tools.
+
 ## 🏗 System Architecture & Key Features
 
 This project was architected with scalability, maintainability, and user experience in mind. It moves beyond standard CRUD operations to handle complex asynchronous tasks and real-time state management.
