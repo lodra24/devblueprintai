@@ -1,0 +1,22 @@
+{
+  "node_modules/canvas-confetti/dist/confetti.module.mjs": {
+    "file": "assets/confetti.module-BUXTfpA_.js",
+    "name": "confetti.module",
+    "src": "node_modules/canvas-confetti/dist/confetti.module.mjs",
+    "isDynamicEntry": true
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-r5zzXyKI.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.tsx": {
+    "file": "assets/app-BxNBI3zI.js",
+    "name": "app",
+    "src": "resources/js/app.tsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/canvas-confetti/dist/confetti.module.mjs"
+    ]
+  }
+}
