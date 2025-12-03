@@ -1,66 +1,126 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Prism AI - Intelligent Marketing Architect
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Live Demo](https://img.shields.io/badge/Live-Demo-38bdf8?style=for-the-badge&logo=render&logoColor=white)](https://prismai-8kwe.onrender.com/)
+[![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 
-## About Laravel
+**Prism AI** is a full-stack SaaS application that transforms raw product ideas into comprehensive marketing blueprints using Generative AI. It leverages **Laravel 11**, **React**, and **WebSockets** to deliver a real-time, interactive kanban board for marketing angles, user stories, and persona data modeling.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Live Demo
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Experience the application live:** [https://prismai-8kwe.onrender.com/](https://prismai-8kwe.onrender.com/)
 
-## Learning Laravel
+> _Note: The application is hosted on a free Render instance. It might take a moment to spin up initially._
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🏗 System Architecture & Key Features
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+This project was architected with scalability, maintainability, and user experience in mind. It moves beyond standard CRUD operations to handle complex asynchronous tasks and real-time state management.
 
-## Laravel Sponsors
+### 🧠 Backend (Laravel 11)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+-   **Service-Action Pattern:** Business logic is decoupled from controllers. Actions like `SyncEpicsAction` and `SanitiseBlueprintDataAction` ensure code reusability and testability.
+-   **Polymorphic AI Provider Layer:** An abstracted `AiProviderInterface` allows seamless switching between **Google Gemini** and **OpenAI**. The system is agnostic to the underlying LLM.
+-   **Robust Parsing Logic:** Custom regex-based parsers (`BlueprintMarkdownParser`) sanitize and structure non-deterministic AI outputs into relational database records.
+-   **Real-Time Broadcasting:** Utilizing **Laravel Reverb**, the backend broadcasts status updates (`generating`, `parsing`, `ready`) to the frontend instantly via private channels.
+-   **Job Queues:** Heavy AI processing is offloaded to Redis queues (`GenerateBlueprintJob`) to prevent request timeouts and ensure a responsive UI.
 
-### Premium Partners
+### 🎨 Frontend (React + TypeScript)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+-   **Optimistic UI:** Powered by **TanStack Query**, the UI updates instantly during interactions (like drag-and-drop reordering via `@dnd-kit`), syncing with the server in the background.
+-   **Type Safety:** Fully typed interfaces (`Project.ts`, `Epic.ts`) ensure contract parity between the Laravel backend resource collections and the React frontend.
+-   **Dynamic Components:** Reusable UI components (Glassmorphism cards, floating inputs) built with **Tailwind CSS**.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🛠 Tech Stack
 
-## Code of Conduct
+-   **Backend:** PHP 8.2, Laravel 11, PostgreSQL, Redis (Queue & Cache).
+-   **Frontend:** React 18, TypeScript, Vite, TanStack Query, DnD Kit.
+-   **Real-time:** Laravel Reverb (WebSockets), Laravel Echo.
+-   **AI Integration:** Google Gemini / OpenAI API via Guzzle.
+-   **DevOps:** Docker (Custom `Dockerfile` & `entrypoint.sh`), Supervisord, Nginx.
+-   **Testing:** PHPUnit (Feature/Unit), Vitest.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## ⚡ Deployment
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The application is containerized for production consistency.
 
-## License
+1.  **Dockerization:** A custom `Dockerfile` sets up PHP 8.2-FPM, Nginx, and system dependencies.
+2.  **Process Management:** `supervisord` manages the Nginx web server, PHP-FPM, the Laravel Queue Worker, and the Reverb WebSocket server simultaneously within the container.
+3.  **Entrypoint:** An automated entrypoint script handles database migrations and caching upon container startup.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🧪 Testing
+
+The project maintains high code quality through automated testing.
+
+### Backend Tests
+
+Runs unit tests for parsers and feature tests for API endpoints.
+
+```bash
+php artisan test
+```
+
+### Frontend Tests
+
+Runs component interaction tests using Vitest and React Testing Library.
+
+```bash
+npm run test
+```
+
+---
+
+## 💻 Local Development Setup
+
+1.  **Clone the repository**
+
+    ```bash
+    git clone https://github.com/yourusername/prismai.git
+    cd prismai
+    ```
+
+2.  **Environment Setup**
+
+    ```bash
+    cp .env.example .env
+    # Configure DB_CONNECTION, REDIS_URL, and AI_API_KEYS in .env
+    ```
+
+3.  **Install Dependencies**
+
+    ```bash
+    composer install
+    npm install
+    ```
+
+4.  **Database & Migrations**
+
+    ```bash
+    php artisan migrate --seed
+    ```
+
+5.  **Run Application**
+    ```bash
+    npm run dev
+    php artisan serve
+    php artisan reverb:start # For WebSockets
+    php artisan queue:work   # For AI Jobs
+    ```
+
+---
+
+## 📝 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
