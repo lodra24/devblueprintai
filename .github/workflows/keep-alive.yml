@@ -2,7 +2,6 @@ name: Keep Alive Protocol
 
 on:
   schedule:
-    # Her 14 dakikada bir çalışarak Render'ı uyanık tutar
     - cron: "*/14 * * * *"
   workflow_dispatch:
 

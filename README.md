@@ -15,8 +15,6 @@
 
 **Experience the application live:** [https://prismai-8kwe.onrender.com/](https://prismai-8kwe.onrender.com/)
 
-> _Note: The application is hosted on a free Render instance. It might take a moment to spin up initially._
-
 ---
 
 ## ✨ What It Does
