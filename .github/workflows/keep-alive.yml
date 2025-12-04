@@ -1,0 +1,14 @@
+name: Keep Alive Protocol
+
+on:
+  schedule:
+    # Her 14 dakikada bir çalışarak Render'ı uyanık tutar
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping_site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up Prism AI
+        run: curl -I https://prismai-8kwe.onrender.com/
