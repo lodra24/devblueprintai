@@ -16,6 +16,8 @@ import BoardFilterBar from "@/components/BoardFilterBar";
 import { UserStory } from "@/types";
 import { useBlueprintFilters } from "@/hooks/useBlueprintFilters";
 import { useBlueprintExport } from "@/hooks/useBlueprintExport";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import AuthRequiredModal from "@/components/ui/AuthRequiredModal";
 
 function BlueprintPage() {
     const { projectId } = useParams<{ projectId: string }>();
@@ -52,6 +54,7 @@ function BlueprintPage() {
         project?.status
     );
     const { retry: retryBlueprint, isRetrying } = useRetryBlueprint(project?.id);
+    const authGuard = useAuthGuard();
 
     useEffect(() => {
         if (location.state?.claimed) {
@@ -207,6 +210,7 @@ function BlueprintPage() {
                     visibleEpics={filteredEpics}
                     density={density}
                     onManualSort={handleManualSort}
+                    authGuard={authGuard}
                 />
 
                 <div className="mt-12 space-y-10">
@@ -243,9 +247,17 @@ function BlueprintPage() {
                 onDownloadCsv={handleDownloadAllCsv}
                 isDownloading={isDownloading}
                 projectId={(project?.id ?? projectId) as string}
+                authGuard={authGuard}
             />
 
             {showAuthCallToAction && <AuthCallToAction />}
+
+            <AuthRequiredModal
+                isOpen={authGuard.isAuthModalOpen}
+                onClose={authGuard.closeAuthModal}
+                title="Unlock Editing"
+                description="Create a free account or sign in to reorder cards, generate ideas, and save your changes."
+            />
         </main>
     );
 }

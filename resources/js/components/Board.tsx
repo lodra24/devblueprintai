@@ -18,6 +18,7 @@ import Column from "./Column";
 import { useReorderUserStory } from "@/hooks/useUserStoryMutations";
 import { BoardDensity } from "@/types";
 import { findStoryLocation, resolveReorderIntent } from "@/lib/boardUtils";
+import type { AuthGuardControls } from "@/hooks/useAuthGuard";
 
 interface BoardProps {
     project: Project;
@@ -25,6 +26,7 @@ interface BoardProps {
     visibleEpics?: Epic[];
     density?: BoardDensity;
     onManualSort?: () => void;
+    authGuard?: Pick<AuthGuardControls, "guard" | "canEdit">;
 }
 
 const PRIORITY_BADGE: Record<UserStory["priority"], string> = {
@@ -39,6 +41,7 @@ const Board: React.FC<BoardProps> = ({
     visibleEpics,
     density = "comfortable",
     onManualSort,
+    authGuard,
 }) => {
     const [activeStory, setActiveStory] = useState<UserStory | null>(null);
     const reorderMutation = useReorderUserStory();
@@ -94,70 +97,86 @@ const Board: React.FC<BoardProps> = ({
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        setActiveStory(null);
-        console.log("[drag:end] raw event", {
-            overId: event.over?.id,
-            overData: event.over?.data.current?.sortable,
-            lastFallback: lastCardOverRef.current,
-        });
+        const runDragEnd = () => {
+            setActiveStory(null);
+            console.log("[drag:end] raw event", {
+                overId: event.over?.id,
+                overData: event.over?.data.current?.sortable,
+                lastFallback: lastCardOverRef.current,
+            });
 
-        let effectiveEvent = event;
+            let effectiveEvent = event;
 
-        if (
-            !event.over?.data.current?.sortable ||
-            typeof event.over.data.current.sortable.containerId !== "string"
-        ) {
-            const fallback = lastCardOverRef.current;
+            if (
+                !event.over?.data.current?.sortable ||
+                typeof event.over.data.current.sortable.containerId !== "string"
+            ) {
+                const fallback = lastCardOverRef.current;
 
-            if (fallback) {
-                effectiveEvent = {
-                    ...event,
-                    over: {
-                        id: fallback.id,
-                        data: {
-                            current: {
-                                sortable:
-                                    fallback.index === null
-                                        ? {
-                                              containerId: fallback.containerId,
-                                          }
-                                        : {
-                                              containerId: fallback.containerId,
-                                              index: fallback.index,
-                                          },
+                if (fallback) {
+                    effectiveEvent = {
+                        ...event,
+                        over: {
+                            id: fallback.id,
+                            data: {
+                                current: {
+                                    sortable:
+                                        fallback.index === null
+                                            ? {
+                                                  containerId:
+                                                      fallback.containerId,
+                                              }
+                                            : {
+                                                  containerId:
+                                                      fallback.containerId,
+                                                  index: fallback.index,
+                                              },
+                                },
                             },
-                        },
-                    } as unknown as DragEndEvent["over"],
-                };
+                        } as unknown as DragEndEvent["over"],
+                    };
+                }
             }
-        }
 
-        const intent = resolveReorderIntent(effectiveEvent, project);
-        console.log("[drag:end] intent + local order", {
-            intent,
-            epicOrder: project.epics.map((epic) => ({
-                epic: epic.id,
-                stories: epic.user_stories.map(({ id, position }) => ({
-                    id,
-                    position,
+            const intent = resolveReorderIntent(effectiveEvent, project);
+            console.log("[drag:end] intent + local order", {
+                intent,
+                epicOrder: project.epics.map((epic) => ({
+                    epic: epic.id,
+                    stories: epic.user_stories.map(({ id, position }) => ({
+                        id,
+                        position,
+                    })),
                 })),
-            })),
-        });
-        lastCardOverRef.current = null;
+            });
+            lastCardOverRef.current = null;
 
-        if (!intent) {
+            if (!intent) {
+                return;
+            }
+
+            reorderMutation.mutate({
+                projectId: project.id,
+                ...intent,
+            });
+
+            const source = findStoryLocation(project.epics, intent.storyId);
+            if (source && source.epic.id === intent.targetEpicId) {
+                onManualSort?.();
+            }
+        };
+
+        const handleBlocked = () => {
+            setActiveStory(null);
+            lastCardOverRef.current = null;
+        };
+
+        if (authGuard) {
+            authGuard.guard(runDragEnd, handleBlocked);
             return;
         }
 
-        reorderMutation.mutate({
-            projectId: project.id,
-            ...intent,
-        });
-
-        const source = findStoryLocation(project.epics, intent.storyId);
-        if (source && source.epic.id === intent.targetEpicId) {
-            onManualSort?.();
-        }
+        runDragEnd();
     };
 
     const handleDragCancel = (_event: DragCancelEvent) => {
@@ -189,6 +208,7 @@ const Board: React.FC<BoardProps> = ({
                         epic={epic}
                         onCardSelect={onCardSelect}
                         density={density}
+                        authGuard={authGuard}
                     />
                 ))}
             </div>

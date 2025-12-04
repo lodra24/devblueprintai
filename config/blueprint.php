@@ -10,8 +10,8 @@ return [
         'story_max' => env('BLUEPRINT_LIMIT_STORY_MAX', 1000),
         'column_token_max' => env('BLUEPRINT_LIMIT_COLUMN_TOKEN_MAX', 255),
         'usage' => [
-            'guest_daily_limit' => 2,
-            'user_daily_limit' => 5,
+            'guest_daily_limit' => 20,
+            'user_daily_limit' => 20,
         ],
     ],
     'ad_limits' => [

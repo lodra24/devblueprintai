@@ -6,12 +6,12 @@
     "isDynamicEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-r5zzXyKI.css",
+    "file": "assets/app-iZ2SyNEi.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-BxNBI3zI.js",
+    "file": "assets/app-CBPFUZl3.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,

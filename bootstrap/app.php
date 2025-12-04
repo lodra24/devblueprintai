@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ai.quota' => \App\Http\Middleware\CheckAiUsageQuota::class,
         ]);
 
-        //
+        $middleware->trustProxies(at: '*'); 
     })
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('projects:prune')->daily();

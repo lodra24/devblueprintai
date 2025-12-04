@@ -17,6 +17,7 @@ export interface ProjectMetrics {
 
 export interface Project {
     id: string;
+    user_id: number | null;
     name: string;
     idea_text: string | null;
     status: ProjectStatus;

@@ -9,6 +9,7 @@ import Card from "./Card";
 import { BoardDensity } from "@/types";
 import { useGenerateAiUserStory } from "@/hooks/useUserStoryMutations";
 import { triggerConfetti } from "@/lib/confetti";
+import type { AuthGuardControls } from "@/hooks/useAuthGuard";
 
 const SCROLL_SETTLE_MS = 500;
 const HIGHLIGHT_DURATION_MS = 2500;
@@ -18,6 +19,7 @@ interface ColumnProps {
     epic: Epic;
     onCardSelect?: (story: UserStory) => void;
     density?: BoardDensity;
+    authGuard?: Pick<AuthGuardControls, "guard">;
 }
 
 const Column: React.FC<ColumnProps> = ({
@@ -25,6 +27,7 @@ const Column: React.FC<ColumnProps> = ({
     epic,
     onCardSelect,
     density = "comfortable",
+    authGuard,
 }) => {
     const { setNodeRef } = useDroppable({
         id: epic.id,
@@ -82,6 +85,23 @@ const Column: React.FC<ColumnProps> = ({
     }, [epic.user_stories.length]);
 
     const handleGenerateClick = () => {
+        const perform = () => {
+            isManualGenerationRef.current = true;
+            generateStoryMutation.mutate(
+                { epicId: epic.id },
+                {
+                    onError: () => {
+                        isManualGenerationRef.current = false;
+                    },
+                }
+            );
+        };
+
+        if (authGuard) {
+            authGuard.guard(perform);
+            return;
+        }
+
         isManualGenerationRef.current = true;
         generateStoryMutation.mutate(
             { epicId: epic.id },

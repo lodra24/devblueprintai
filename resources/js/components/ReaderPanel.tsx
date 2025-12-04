@@ -14,6 +14,7 @@ import {
     ActionIcon,
 } from "@/components/reader/ReaderActions";
 import { useReaderForm } from "@/hooks/useReaderForm";
+import type { AuthGuardControls } from "@/hooks/useAuthGuard";
 
 interface ReaderPanelProps {
     story: UserStory | null;
@@ -22,6 +23,7 @@ interface ReaderPanelProps {
     onDownloadCsv?: () => void;
     isDownloading?: boolean;
     projectId: string;
+    authGuard?: Pick<AuthGuardControls, "guard" | "isAuthModalOpen">;
 }
 
 type AssetKey = keyof DerivedFields["assets"];
@@ -59,6 +61,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
     onDownloadCsv,
     isDownloading,
     projectId,
+    authGuard,
 }) => {
     const {
         derived,
@@ -248,6 +251,14 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
         !isPersistedContentIdentical &&
         !recentlyRestored;
 
+    const handleSaveClick = useCallback(() => {
+        if (authGuard) {
+            authGuard.guard(() => handleSave());
+            return;
+        }
+        handleSave();
+    }, [authGuard, handleSave]);
+
     const footer = (
         <div className="mt-auto border-t border-stone/20 bg-stone-50/50 p-6">
             <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -299,7 +310,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                                     ? "Saving..."
                                     : "Save Changes"
                             }
-                            onClick={handleSave}
+                            onClick={handleSaveClick}
                             icon={updateStoryMutation.isPending ? "spinner" : "save"}
                             variant="primary"
                             disabled={
@@ -329,7 +340,7 @@ const ReaderPanel: React.FC<ReaderPanelProps> = ({
                     onClick={handleAttemptClose}
                 />
                 <FocusTrap
-                    active={isOpen}
+                    active={isOpen && !authGuard?.isAuthModalOpen}
                     focusTrapOptions={{
                         fallbackFocus: () => panelRef.current ?? document.body,
                         allowOutsideClick: true,
