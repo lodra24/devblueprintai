@@ -108,22 +108,28 @@ class ValidateBlueprintDataActionTest extends TestCase
         $this->expectException(ValidationException::class);
 
         ($this->action)([
-            'epics' => [],
+            'epics' => [
+                [
+                    'title' => 'Valid Epic',
+                    'stories' => [
+                        ['content' => 'Valid story'],
+                    ],
+                ],
+            ],
             'schema_suggestions' => [
-                ['table_name' => 'users', 'columns' => ['id', 'description<>']],
+                ['table_name' => 'invalid table!', 'columns' => ['id', 'description']],
             ],
         ]);
     }
     
-    public function test_it_accepts_empty_epics_array(): void
+    public function test_it_rejects_empty_epics_array(): void
     {
-        $validData = [
+        $this->expectException(ValidationException::class);
+
+        ($this->action)([
             'epics' => [],
             'schema_suggestions' => [],
-        ];
-
-        $validated = ($this->action)($validData);
-        $this->assertEquals($validData, $validated);
+        ]);
     }
 
     public function test_it_requires_at_least_one_story_per_epic(): void
@@ -144,7 +150,14 @@ class ValidateBlueprintDataActionTest extends TestCase
     public function test_it_accepts_decimal_precision_in_schema_columns(): void
     {
         $validData = [
-            'epics' => [],
+            'epics' => [
+                [
+                    'title' => 'Epic With Story',
+                    'stories' => [
+                        ['content' => 'Example story'],
+                    ],
+                ],
+            ],
             'schema_suggestions' => [
                 [
                     'table_name' => 'transactions',

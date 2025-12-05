@@ -27,7 +27,7 @@ class ValidateBlueprintDataAction
         $maxColumnToken = (int) ($limits['column_token_max'] ?? 255);
 
         $validator = Validator::make($data, [
-            'epics' => ['present', 'array', 'max:' . $maxEpics],
+            'epics' => ['required', 'array', 'min:1', 'max:' . $maxEpics],
             'epics.*.title' => ['required', 'string', 'max:' . $maxTitle, 'distinct'],
             'epics.*.stories' => ['present', 'array', 'min:1', 'max:' . $maxStories],
             'epics.*.stories.*.content' => ['required', 'string', 'max:' . $maxStory],
@@ -53,4 +53,3 @@ class ValidateBlueprintDataAction
         return $validator->validate();
     }
 }
-

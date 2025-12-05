@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\ProjectStatus;
 use App\Events\BlueprintGenerated;
 use App\Events\BlueprintStatusUpdated;
+use App\Models\AiRun;
 use App\Models\Project;
 use App\Services\AiGenerationService;
 use App\Services\BlueprintPersistenceService;
@@ -62,6 +63,7 @@ class GenerateBlueprintJob implements ShouldQueue
             BlueprintGenerated::dispatch($project->fresh(), $promptHash);
             Log::info("Blueprint generation fully completed for project ID: {$this->projectId}");
         } catch (Throwable $e) {
+            $this->markAiRunAsFailed($project, $promptHash, $e->getMessage());
             $this->updateProject($project, ProjectStatus::Failed, $project->progress ?? 0, 'failed', $e->getMessage());
             Log::error("Blueprint generation failed for project ID: {$this->projectId}. Error: {$e->getMessage()}");
 
@@ -88,5 +90,25 @@ class GenerateBlueprintJob implements ShouldQueue
             $stage,
             $message
         );
+    }
+
+    private function markAiRunAsFailed(Project $project, ?string $promptHash, string $message): void
+    {
+        if (empty($promptHash)) {
+            return;
+        }
+
+        $aiRun = AiRun::where('project_id', $project->id)
+            ->where('prompt_hash', $promptHash)
+            ->where('status', 'success')
+            ->latest()
+            ->first();
+
+        if ($aiRun) {
+            $aiRun->forceFill([
+                'status' => 'failed',
+                'error_message' => $message,
+            ])->save();
+        }
     }
 }

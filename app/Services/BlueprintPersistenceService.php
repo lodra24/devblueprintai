@@ -6,6 +6,7 @@ use App\Actions\SanitiseBlueprintDataAction;
 use App\Actions\ValidateBlueprintDataAction;
 use App\Actions\Blueprint\SyncEpicsAction;
 use App\Actions\Blueprint\SyncSchemaSuggestionsAction;
+use App\Exceptions\AiGenerationException;
 use App\Models\Project;
 use App\Parsing\BlueprintMarkdownParser;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,11 @@ class BlueprintPersistenceService
         }
 
         ['data' => $sanitisedData, 'warnings' => $warnings] = ($this->sanitiseBlueprintData)($parsedData);
+
+        if (empty($sanitisedData['epics'])) {
+            throw new AiGenerationException('AI generation produced no usable epics or stories.');
+        }
+
         [$validatedData, $schemaDropped] = $this->validateWithSchemaFallback($sanitisedData, $project);
         $telemetryEnabled = (bool) config('blueprint.features.schema_telemetry', true);
 
